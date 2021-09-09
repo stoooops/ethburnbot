@@ -1,0 +1,2 @@
+# ethburnbot
+ETH Burn 🔥 Bot
