@@ -52,6 +52,7 @@ def setup_logging() -> None:
 
 def run_processor() -> None:
     global caught_up
+    # first block to process
     block_num = LONDON
 
     block_processor = BlockProcessor()

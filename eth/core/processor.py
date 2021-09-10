@@ -15,6 +15,14 @@ from potpourri.python.ethereum.block import Block
 LOG = getLogger(__name__)
 
 
+def day_str(day: datetime) -> str:
+    return day.strftime(f"%Y-%m-%d")
+
+
+def hour_str(hour: datetime, delimiter="T") -> str:
+    return hour.strftime(f"%Y-%m-%d{delimiter}%H:%M%Z")
+
+
 def get_emoji(burnt_eth: int) -> str:
     emoji = "🔥"
     val = burnt_eth
@@ -87,41 +95,51 @@ class BlockProcessor:
 
             # summarize hour
             if block.hour_dt > prev_block.hour_dt:
-                LOG.info(f"Processing hour before {block.timestamp_dt}...")
-                metrics: AggregateBlockMetrics = self.aggregate(
-                    hour_dt=prev_block.hour_dt
-                )
-                self.write_tweet_if_not_tweeted(metrics)
+                if self.needs_tweet(hour_str(prev_block.hour_dt)):
+                    LOG.info(f"Processing hour before {block.timestamp_dt}...")
+                    metrics: AggregateBlockMetrics = self.aggregate(
+                        hour_dt=prev_block.hour_dt
+                    )
+                    self.write_tweet(metrics)
 
             # summarize day
             if block.day_dt > prev_block.day_dt:
-                LOG.info(f"Processing day before {block.timestamp_dt}...")
-                metrics: AggregateBlockMetrics = self.aggregate(
-                    day_dt=prev_block.day_dt
-                )
-                self.write_tweet_if_not_tweeted(metrics)
+                if self.needs_tweet(day_str(prev_block.day_dt)):
+                    LOG.info(f"Processing day before {block.timestamp_dt}...")
+                    metrics: AggregateBlockMetrics = self.aggregate(
+                        day_dt=prev_block.day_dt
+                    )
+                    self.write_tweet(metrics)
 
-    def write_tweet_if_not_tweeted(self, metrics: AggregateBlockMetrics) -> None:
-        tweet: str = write_tweet(metrics)
+    def tweet_filename(self, time_str: str) -> str:
+        return f"tweet_{time_str}.txt"
+
+    def needs_tweet(self, time_str: str) -> bool:
+        tweet_filename: str = self.tweet_filename(time_str)
+
+        # check if already tweeted
+        tweeted_filepath: str = os.path.join(tweeted_tweets_dir(), tweet_filename)
+        if os.path.exists(tweeted_filepath):
+            LOG.info(f"Tweet {time_str} already written")
+            return False
+        else:
+            return True
+
+    def write_tweet(self, metrics: AggregateBlockMetrics) -> None:
         time_str = (
-            metrics.hour_str()
+            hour_str(metrics.hour)
             if isinstance(metrics, HourlyAggregateBlockMetrics)
-            else metrics.day_str()
+            else day_str(metrics.day)
         )
         time_range_str = (
             metrics.hour_range_str()
             if isinstance(metrics, HourlyAggregateBlockMetrics)
             else metrics.day_range_str()
         )
-        tweet_filename: str = f"tweet_{time_str}.txt"
 
-        # check if already tweeted
-        tweeted_filepath: str = os.path.join(tweeted_tweets_dir(), tweet_filename)
-        if os.path.exists(tweeted_filepath):
-            LOG.debug(f"Tweet {time_range_str} already written")
-            return
-
+        tweet_filename: str = self.tweet_filename(time_str)
         # write tweet to pending tweets dir
+        tweet: str = write_tweet(metrics)
         pending_filepath: str = os.path.join(pending_tweets_dir(), tweet_filename)
         LOG.info(f"Writing tweet {time_range_str} to {pending_filepath}")
         with open(pending_filepath, "w") as f:

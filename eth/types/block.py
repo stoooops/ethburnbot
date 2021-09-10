@@ -9,6 +9,14 @@ from potpourri.python.ethereum.block import BaseBlock, Block, UncleBlock
 LOG = getLogger(__name__)
 
 
+def day_str(day: datetime) -> str:
+    return day.strftime(f"%Y-%m-%d")
+
+
+def hour_str(hour: datetime, delimiter="T") -> str:
+    return hour.strftime(f"%Y-%m-%d{delimiter}%H:%M%Z")
+
+
 @dataclass
 class AggregateBlockMetrics:
     burnt_eth: Decimal
@@ -42,9 +50,6 @@ class AggregateBlockMetrics:
             + next_day.strftime("24:%M%Z")
         )
 
-    def day_str(self) -> str:
-        return self.day.strftime(f"%Y-%m-%d")
-
     def __str__(self) -> str:
         return str(vars(self))
 
@@ -60,9 +65,6 @@ class HourlyAggregateBlockMetrics(AggregateBlockMetrics):
             + "-"
             + next_hour.strftime("%H:%M%Z")
         )
-
-    def hour_str(self, delimiter="T") -> str:
-        return self.hour.strftime(f"%Y-%m-%d{delimiter}%H:%M%Z")
 
     def time_range_str(self, delimiter="T") -> str:
         return self.hour_range_str(delimiter=delimiter)
