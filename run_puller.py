@@ -55,7 +55,7 @@ def run_puller(eth_addr: str, eth_port: int) -> None:
 
     prev_sha3_uncles = ""
 
-    start_block = LONDON
+    start_block = 13394800
     while _still_running():
         time.sleep(0)
         latest_block_number = block_puller.eth_blockNumber()
