@@ -14,7 +14,11 @@ def read_block(num: int) -> Optional[SummaryBlock]:
         return None
 
     with open(filepath, "r") as f:
-        content = json.loads(f.read())
+        try:
+            content = json.loads(f.read())
+        except Exception as e:
+            print("could not read", f)
+            raise
         return SummaryBlock(content)
 
 
