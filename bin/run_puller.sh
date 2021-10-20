@@ -3,11 +3,13 @@
 set -x
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+REPO_DIR=$(dirname $SCRIPT_DIR)
 
 docker stop ethburnbot_puller
 docker rm -f ethburnbot_puller
 docker run \
-    -v ${SCRIPT_DIR}:/app \
+    -v ${REPO_DIR}:/app \
     --name ethburnbot_puller \
     -t ethburnbot \
-    python -m run_puller "${@}"
+    python -m bin.run_puller "${@}"
+
