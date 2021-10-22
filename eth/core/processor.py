@@ -4,6 +4,7 @@ from decimal import Decimal
 from logging import getLogger
 from typing import List, Optional
 
+from eth.core.writer import write_tweet_aggregate, write_tweet_threshold
 from eth.types.block import (
     AggregateBlockMetrics,
     HourlyAggregateBlockMetrics,
@@ -11,6 +12,7 @@ from eth.types.block import (
 )
 from eth.utils.file_utils import pending_tweets_dir, tweeted_tweets_dir
 from potpourri.python.ethereum.block import Block
+from potpourri.python.ethereum.coinbase.client import CoinbaseClient
 
 LOG = getLogger(__name__)
 
@@ -23,67 +25,54 @@ def hour_str(hour: datetime, delimiter="T") -> str:
     return hour.strftime(f"%Y-%m-%d{delimiter}%H:%M%Z")
 
 
-def get_emoji(burnt_eth: int) -> str:
-    emoji = "🔥"
-    val = burnt_eth
-    while val / 10 >= 1:
-        emoji = emoji + "🔥"
-        val = val / 10
-    return emoji
-
-
-def write_tweet(metrics: AggregateBlockMetrics) -> str:
-    emoji = get_emoji(metrics.burnt_eth)
-
-    # TODO compute accurately this is just a snapshot taken. Small rounding error for now.
-    SUPPLY = 117031591
-
-    issuance_multiplier = 365 * (
-        24 if isinstance(metrics, HourlyAggregateBlockMetrics) else 1
-    )
-    change_per_year = issuance_multiplier * metrics.net_issuance_eth
-    inflation_pct = 100 * change_per_year / SUPPLY
-    # no_burn_change_per_year =  365*24*metrics.issuance_eth
-    # no_burn_annualized = 100 * no_burn_change_per_year / SUPPLY
-
-    time_phrase = (
-        "last hour" if isinstance(metrics, HourlyAggregateBlockMetrics) else "yesterday"
-    )
-    header_line = f"{metrics.burnt_eth:,.4f} $ETH burned {emoji} {time_phrase}."
-    if int(metrics.burnt_eth) == 69:
-        header_line = header_line + " Nice."
-
-    annualized_line = f"Annualized: {inflation_pct:.2f}%"
-    if inflation_pct < 0:
-        annualized_line = annualized_line + " 📉"
-
-    return "\n".join(
-        [
-            header_line,
-            "",
-            f"Issuance: {metrics.issuance_eth:,.4f} ETH",
-            f"Net Change: {'+' if metrics.net_issuance_eth > 0 else ''}{metrics.net_issuance_eth:,.4f} ETH",
-            annualized_line,
-            "",
-            f"{metrics.time_range_str(delimiter=' ')} UTC",
-            f"Last Block: {metrics.end_number}",
-            "",
-            f"Cumulative 🔥: {metrics.cumulative_burned_eth:,.4f} ETH",
-        ]
-    )
+TWEET_THRESHOLD = 10000
 
 
 class BlockProcessor:
     def __init__(self):
         self._blocks: List[SummaryBlock] = []
+        self._burned_eth: Decimal = Decimal(0)
+        self._burned_threshold = TWEET_THRESHOLD
+
+        self._coinbase_client = CoinbaseClient()
 
     def process(self, block: SummaryBlock) -> None:
         self._blocks.append(block)
         LOG.debug(
             f"Block #{block.number} ({block.timestamp_dt}) burned {block.burned_eth:.18f}"
         )
+        self._burned_eth = self._burned_eth + block.burned_eth
 
         self._process_if_end_hour()
+        self._process_if_threshold()
+
+    # THRESHOLD
+
+    def _process_if_threshold(self) -> None:
+        if self._burned_eth > self._burned_threshold:
+            LOG.info(f"Burned: {self._burned_eth}")
+
+            if self.needs_tweet(f"{self._burned_threshold}"):
+                # get price
+                eth_usd_price: Decimal = self._coinbase_client.get_price("ETH")
+
+                self.write_tweet_threshold(eth_usd_price)
+            self._burned_threshold += TWEET_THRESHOLD
+
+    def write_tweet_threshold(self, eth_usd_price: Decimal) -> None:
+        tweet_filename: str = self.tweet_filename(self._burned_threshold)
+        # write tweet to pending tweets dir
+        tweet: str = write_tweet_threshold(
+            burnt_eth=self._burned_threshold, eth_usd_price=eth_usd_price
+        )
+        pending_filepath: str = os.path.join(pending_tweets_dir(), tweet_filename)
+        LOG.info(
+            f"Writing {self._burned_threshold} ETH burned tweet to {pending_filepath}"
+        )
+        with open(pending_filepath, "w") as f:
+            f.write(tweet)
+
+    # TIME AGGREGATE
 
     def _process_if_end_hour(self) -> None:
         assert len(self._blocks) > 0
@@ -96,20 +85,30 @@ class BlockProcessor:
             # summarize hour
             if block.hour_dt > prev_block.hour_dt:
                 if self.needs_tweet(hour_str(prev_block.hour_dt)):
+                    # get price
+                    eth_usd_price: Decimal = self._coinbase_client.get_price("ETH")
+
                     LOG.info(f"Processing hour before {block.timestamp_dt}...")
                     metrics: AggregateBlockMetrics = self.aggregate(
                         hour_dt=prev_block.hour_dt
                     )
-                    self.write_tweet(metrics)
+                    self._write_tweet_aggregate(
+                        metrics=metrics, eth_usd_price=eth_usd_price
+                    )
 
             # summarize day
             if block.day_dt > prev_block.day_dt:
                 if self.needs_tweet(day_str(prev_block.day_dt)):
+                    # get price
+                    eth_usd_price: Decimal = self._coinbase_client.get_price("ETH")
+
                     LOG.info(f"Processing day before {block.timestamp_dt}...")
                     metrics: AggregateBlockMetrics = self.aggregate(
                         day_dt=prev_block.day_dt
                     )
-                    self.write_tweet(metrics)
+                    self._write_tweet_aggregate(
+                        metrics=metrics, eth_usd_price=eth_usd_price
+                    )
 
     def tweet_filename(self, time_str: str) -> str:
         return f"tweet_{time_str}.txt"
@@ -125,7 +124,9 @@ class BlockProcessor:
         else:
             return True
 
-    def write_tweet(self, metrics: AggregateBlockMetrics) -> None:
+    def _write_tweet_aggregate(
+        self, metrics: AggregateBlockMetrics, eth_usd_price: Decimal
+    ) -> None:
         time_str = (
             hour_str(metrics.hour)
             if isinstance(metrics, HourlyAggregateBlockMetrics)
@@ -139,7 +140,7 @@ class BlockProcessor:
 
         tweet_filename: str = self.tweet_filename(time_str)
         # write tweet to pending tweets dir
-        tweet: str = write_tweet(metrics)
+        tweet: str = write_tweet_aggregate(metrics, eth_usd_price)
         pending_filepath: str = os.path.join(pending_tweets_dir(), tweet_filename)
         LOG.info(f"Writing tweet {time_range_str} to {pending_filepath}")
         with open(pending_filepath, "w") as f:

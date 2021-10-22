@@ -1,7 +1,9 @@
+import functools
 import logging
 import signal
 import sys
 import time
+from argparse import ArgumentParser, Namespace
 from threading import Thread
 from typing import Optional
 
@@ -75,7 +77,7 @@ def run_processor() -> None:
     LOG.info("Exit Block Processor")
 
 
-def run_tweeter() -> None:
+def run_tweeter(dry_run: bool) -> None:
     global caught_up
 
     tweeter = Tweeter()
@@ -88,7 +90,7 @@ def run_tweeter() -> None:
         if not caught_up:
             LOG.info("Waiting for processor to catch up before tweeting")
         else:
-            tweeted = tweeter.process(dry_run=False)
+            tweeted = tweeter.process(dry_run=dry_run)
 
         for _ in range(wakeup_sec if not tweeted else 1):
             if not _still_running():
@@ -96,13 +98,24 @@ def run_tweeter() -> None:
             time.sleep(1)
 
 
+def parse_args() -> Namespace:
+    parser = ArgumentParser()
+    parser.add_argument("--dry-run", action="store_true", help="Dry run")
+    return parser.parse_args()
+
+
 def main():
     setup_logging()
 
     signal.signal(signal.SIGINT, signal_handler)
 
+    args: Namespace = parse_args()
+    dry_run: bool = getattr(args, "dry_run")
+
     processor = Thread(target=run_processor, name="Block Processor")
-    tweeter = Thread(target=run_tweeter, name="Tweeter")
+    tweeter = Thread(
+        target=functools.partial(run_tweeter, dry_run=dry_run), name="Tweeter"
+    )
 
     processor.start()
     tweeter.start()
