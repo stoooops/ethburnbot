@@ -41,6 +41,7 @@ class BlockPuller:
                     uncle_block = None
                     if cached:
                         uncle_block = read_uncle_block(block.number, i)
+                    found_cached = uncle_block is not None
 
                     if uncle_block is None:
                         uncle_block = (
@@ -48,7 +49,7 @@ class BlockPuller:
                                 block.number, i
                             )
                         )
-                        write_uncle_block(uncle_block)
+                        write_uncle_block(uncle_block, warn_overwrite=found_cached)
 
                     uncles.append(uncle_block)
 
@@ -60,6 +61,7 @@ class BlockPuller:
         block = None
         if cached:
             block = read_block(num)
+        found_cached = block is not None
 
         if block is None:
             # else we need to pull it and write it
@@ -69,7 +71,7 @@ class BlockPuller:
             block, cached=cached, prev_sha3_uncles=prev_sha3_uncles
         )
         detailed_block: DetailedBlock = DetailedBlock(block, uncles)
-        write_block(detailed_block)
+        write_block(detailed_block, warn_overwrite=found_cached)
         return block
 
     def eth_getUncleCountByBlockNumber(self, num: int, cached: bool) -> int:

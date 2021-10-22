@@ -49,13 +49,13 @@ def setup_logging() -> None:
     root.addHandler(handler)
 
 
-def run_puller(eth_addr: str, eth_port: int) -> None:
+def run_puller(eth_addr: str, eth_port: int, use_cache: bool, block: int) -> None:
     eth_client: EthereumClient = GethClient(ip_addr=eth_addr, port=eth_port)
     block_puller: BlockPuller = BlockPuller(eth_client=eth_client)
 
     prev_sha3_uncles = ""
 
-    start_block = 13394800
+    start_block = block
     while _still_running():
         time.sleep(0)
         latest_block_number = block_puller.eth_blockNumber()
@@ -64,7 +64,7 @@ def run_puller(eth_addr: str, eth_port: int) -> None:
         if start_block != latest_block_number:
             for block_num in range(start_block, latest_block_number):
                 block = block_puller.eth_getBlockByNumber(
-                    block_num, cached=True, prev_sha3_uncles=prev_sha3_uncles
+                    block_num, cached=use_cache, prev_sha3_uncles=prev_sha3_uncles
                 )
                 prev_sha3_uncles = block._sha3_uncles
 
@@ -97,6 +97,8 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "--eth.port", type=int, default=8545, help="HTTP-RPC server listening port"
     )
+    parser.add_argument("--no-cache", action="store_true")
+    parser.add_argument("--block", type=int, default=LONDON, help="Start block")
     return parser.parse_args()
 
 
@@ -108,10 +110,14 @@ def main():
     args: Namespace = parse_args()
     addr: str = getattr(args, "eth.addr")
     port: int = getattr(args, "eth.port")
+    use_cache: bool = not getattr(args, "no_cache")
+    block: int = getattr(args, "block")
 
     puller = Thread(
         name="Block Cacher",
-        target=functools.partial(run_puller, eth_addr=addr, eth_port=port),
+        target=functools.partial(
+            run_puller, eth_addr=addr, eth_port=port, use_cache=use_cache, block=block
+        ),
     )
     puller.start()
     puller.join()

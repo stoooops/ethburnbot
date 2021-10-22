@@ -15,13 +15,17 @@ from eth.utils.file_utils import block_filepath, uncle_block_filepath
 LOG = logging.getLogger(__name__)
 
 
-def write_block(block: Block) -> None:
+def write_block(block: Block, warn_overwrite: bool = False) -> None:
     filepath = block_filepath(block.number)
     exists = os.path.exists(filepath)
     tmp_filepath = f"{filepath}.tmp"
     with open(tmp_filepath, "w") as f:
         if not exists:
             LOG.info(f"Write block {block.number} @ {block.timestamp_dt} to {filepath}")
+        elif warn_overwrite:
+            LOG.warning(
+                f"Overwrite block {block.number} @ {block.timestamp_dt} to {filepath}"
+            )
         else:
             LOG.debug(
                 f"Overwrite block {block.number} @ {block.timestamp_dt} to {filepath}"
@@ -32,7 +36,7 @@ def write_block(block: Block) -> None:
     shutil.move(tmp_filepath, filepath)
 
 
-def write_uncle_block(uncle_block: UncleBlock) -> None:
+def write_uncle_block(uncle_block: UncleBlock, warn_overwrite: bool = False) -> None:
     filepath = uncle_block_filepath(
         uncle_block.mined_block_num, uncle_block.uncle_index
     )
@@ -43,9 +47,13 @@ def write_uncle_block(uncle_block: UncleBlock) -> None:
             LOG.info(
                 f"Write uncle block {uncle_block.mined_block_num}[{uncle_block.uncle_index}] to {filepath}"
             )
+        elif warn_overwrite:
+            LOG.warning(
+                f"Overwrite uncle block {uncle_block.mined_block_num}[{uncle_block.uncle_index}] to {filepath}"
+            )
         else:
             LOG.debug(
-                f"Overwrite block {uncle_block.mined_block_num}[{uncle_block.uncle_index}] to {filepath}"
+                f"Overwrite uncle block {uncle_block.number} @ {uncle_block.timestamp_dt} to {filepath}"
             )
 
         f.write(json.dumps(uncle_block.json, indent=2))
@@ -115,4 +123,7 @@ def write_tweet_aggregate(
 def write_tweet_threshold(*, burnt_eth: Decimal, eth_usd_price: Decimal) -> str:
     total_price = burnt_eth * eth_usd_price
 
-    return f"Cumulative {burnt_eth:,.0f} $ETH burned! 🔥 (${total_price:,.0f})"
+    tweet = f"Cumulative {burnt_eth:,.0f} $ETH burned! 🔥 (${total_price:,.0f})"
+    if burnt_eth == 690000:
+        tweet += "\n\nNice."
+    return tweet
