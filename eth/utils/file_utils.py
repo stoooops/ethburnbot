@@ -31,12 +31,13 @@ def pending_tweets_dir() -> str:
     return os.path.join(tweets_dir(), "pending")
 
 
-def pending_tweets_filepaths() -> List[str]:
+def pending_tweets_filepaths(ext: str = "") -> List[str]:
     return list(
         sorted(
             [
                 os.path.join(pending_tweets_dir(), f)
                 for f in next(os.walk(pending_tweets_dir()), (None, None, []))[2]
+                if ext == "" or f.endswith(ext)
             ]
         )
     )

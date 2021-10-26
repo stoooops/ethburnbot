@@ -20,7 +20,6 @@ def hour_str(hour: datetime, delimiter="T") -> str:
 @dataclass
 class AggregateBlockMetrics:
     burnt_eth: Decimal
-    day: datetime
     start_number: int
     end_number: int
     cumulative_burned_eth: Decimal
@@ -39,6 +38,14 @@ class AggregateBlockMetrics:
     def net_issuance_eth(self) -> Decimal:
         return self.issuance_eth - self.burnt_eth
 
+    def __str__(self) -> str:
+        return str(vars(self))
+
+
+@dataclass
+class DayAggregateBlockMetrics(AggregateBlockMetrics):
+    day: datetime
+
     def time_range_str(self, delimiter="T") -> str:
         return self.day_range_str(delimiter=delimiter)
 
@@ -50,12 +57,9 @@ class AggregateBlockMetrics:
             + next_day.strftime("24:%M%Z")
         )
 
-    def __str__(self) -> str:
-        return str(vars(self))
-
 
 @dataclass
-class HourlyAggregateBlockMetrics(AggregateBlockMetrics):
+class HourlyAggregateBlockMetrics(DayAggregateBlockMetrics):
     hour: datetime
 
     def hour_range_str(self, delimiter="T") -> str:

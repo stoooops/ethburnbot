@@ -15,6 +15,10 @@ from eth.utils.file_utils import block_filepath, uncle_block_filepath
 LOG = logging.getLogger(__name__)
 
 
+# TODO compute accurately this is just a snapshot taken. Small rounding error for now.
+SUPPLY = 118_027_683
+
+
 def write_block(block: Block, warn_overwrite: bool = False) -> None:
     filepath = block_filepath(block.number)
     exists = os.path.exists(filepath)
@@ -73,6 +77,43 @@ def get_emoji(burnt_eth: Decimal) -> str:
     return emoji
 
 
+def to_billion_usd(num: Decimal) -> str:
+    return f"${num / 1_000_000_000:,.2f}B"
+
+
+def write_tweet_fundamentals(
+    metrics: AggregateBlockMetrics, eth_usd_price: Decimal
+) -> str:
+    period_burn = metrics.burnt_eth * eth_usd_price
+
+    annualized_burn = period_burn * 365 / 30
+    market_cap = eth_usd_price * SUPPLY
+
+    return "\n".join(
+        [
+            "Fundamentals $ETH",
+            "",
+            f"Price: ${eth_usd_price:,.2f}",
+            f"Market Cap: {to_billion_usd(market_cap)}",
+            "",
+            f"30d 🔥: {metrics.burnt_eth:,.0f} ETH ({to_billion_usd(period_burn)})",
+            f"Annualized: {metrics.burnt_eth * 365/30:,.0f} ETH ({to_billion_usd(annualized_burn)})",
+            "",
+            f"Price / Revenue: {market_cap / annualized_burn:,.2f}",
+        ]
+    )
+
+
+def calc_inflation_rate(metrics: AggregateBlockMetrics) -> Decimal:
+    issuance_multiplier = 365 * (
+        24 if isinstance(metrics, HourlyAggregateBlockMetrics) else 1
+    )
+    change_per_year: Decimal = issuance_multiplier * metrics.net_issuance_eth
+    inflation_pct: Decimal = 100 * change_per_year / SUPPLY
+
+    return inflation_pct
+
+
 def write_tweet_aggregate(
     metrics: AggregateBlockMetrics, eth_usd_price: Decimal
 ) -> str:
@@ -81,14 +122,7 @@ def write_tweet_aggregate(
     burned_price_usd = metrics.burnt_eth * eth_usd_price
     cumulative_burned_price_usd = metrics.cumulative_burned_eth * eth_usd_price
 
-    # TODO compute accurately this is just a snapshot taken. Small rounding error for now.
-    SUPPLY = 118_027_683
-
-    issuance_multiplier = 365 * (
-        24 if isinstance(metrics, HourlyAggregateBlockMetrics) else 1
-    )
-    change_per_year = issuance_multiplier * metrics.net_issuance_eth
-    inflation_pct = 100 * change_per_year / SUPPLY
+    inflation_pct = calc_inflation_rate(metrics)
     # no_burn_change_per_year =  365*24*metrics.issuance_eth
     # no_burn_annualized = 100 * no_burn_change_per_year / SUPPLY
 
@@ -111,11 +145,11 @@ def write_tweet_aggregate(
             f"Issuance: {metrics.issuance_eth:,.4f} ETH",
             f"Net Change: {'+' if metrics.net_issuance_eth > 0 else ''}{metrics.net_issuance_eth:,.4f} ETH",
             annualized_line,
-            "",
-            f"{metrics.time_range_str(delimiter=' ')} UTC",
-            f"Last Block: {metrics.end_number}",
-            "",
-            f"Cumulative 🔥: {metrics.cumulative_burned_eth:,.4f} ETH (${cumulative_burned_price_usd:,.0f})",
+            # "",
+            # f"{metrics.time_range_str(delimiter=' ')} UTC",
+            # f"Last Block: {metrics.end_number}",
+            # "",
+            # f"Cumulative 🔥: {metrics.cumulative_burned_eth:,.4f} ETH (${cumulative_burned_price_usd:,.0f})",
         ]
     )
 
