@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime, timedelta
 from decimal import Decimal
 from logging import getLogger
@@ -41,6 +42,8 @@ class BlockProcessor:
         self._burned_threshold = TWEET_THRESHOLD
 
         self._coinbase_client = CoinbaseClient()
+        self._eth_usd_price: Decimal = self._coinbase_client.get_price("ETH")
+        self._eth_usd_price_time: int = int(time.time())
 
         self._written = set()
 
@@ -67,6 +70,48 @@ class BlockProcessor:
                 self._process_if_fundamental_update()
         self._process_if_end_hour()
         self._process_if_threshold()
+
+        if block.number % 10 == 0:
+            now = int(time.time())
+            if now >= self._eth_usd_price_time + 60:
+                try:
+                    self._eth_usd_price: Decimal = self._coinbase_client.get_price(
+                        "ETH"
+                    )
+                    self._eth_usd_price_time = now
+                    LOG.info(f"USD Price = ${self._eth_usd_price:,.2f}")
+
+                except:
+                    pass
+
+            burned_usd: Decimal = self._burned_eth * self._eth_usd_price
+            threshold_usd: Decimal = Decimal(3_000_000_000)
+            filename_sub_str: str = f"burned_threshold_USD{threshold_usd:.0f}"
+            LOG.info(f"Burned ${burned_usd:,.2f} as of block {block.number}")
+            if burned_usd >= threshold_usd:
+                # LOG.info(f"Threshold met: ${threshold_usd}")
+                needs_tweet = self.needs_tweet(filename_sub_str)
+                #LOG.info(f"Needs tweet: {filename_sub_str} = {needs_tweet}")
+                if needs_tweet:
+                    self._write_tweet_burned_eth_usd(
+                        filename_sub=filename_sub_str, threshold_usd=threshold_usd
+                    )
+
+    # AMT BURNED
+
+    def _write_tweet_burned_eth_usd(
+        self, filename_sub: str, threshold_usd: Decimal
+    ) -> None:
+
+        tweet_filename: str = self.tweet_filename(filename_sub)
+        # write tweet to pending tweets dir
+
+        tweet: str = f"Cumulative ${threshold_usd:,.0f} of ETH burned! 🔥 ({self._burned_eth:,.2f} ETH)"
+        pending_filepath: str = os.path.join(pending_tweets_dir(), tweet_filename)
+        LOG.info(f"Writing tweet {filename_sub} to {pending_filepath}")
+        with open(pending_filepath, "w") as f:
+            f.write(tweet)
+        self._written.add(filename_sub)
 
     # FUNDAMENTALS
 
