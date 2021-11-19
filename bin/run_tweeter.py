@@ -4,8 +4,9 @@ import signal
 import sys
 import time
 from argparse import ArgumentParser, Namespace
+from decimal import Decimal
 from threading import Thread
-from typing import Optional
+from typing import Dict, Optional
 
 from eth.core.processor import BlockProcessor
 from eth.core.reader import read_block
@@ -45,19 +46,28 @@ def setup_logging() -> None:
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        "%(asctime)s %(levelname)s (%(threadName)s) [%(name)s:%(lineno)s] %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s %(levelname)s (%(threadName)s) [%(name)s:%(lineno)s] %(message)s")
     handler.setFormatter(formatter)
     root.addHandler(handler)
 
 
-def run_processor() -> None:
+CHECKPOINT_1 = 13233800
+CHECKPOINT_2 = 13596500
+CHECKPOINT_3 = 13648000
+BURNED_ETH: Dict[int, Decimal] = {
+    LONDON: Decimal(0),
+    CHECKPOINT_1 + 1: Decimal("301720.664913446243502258"),
+    CHECKPOINT_2 + 1: Decimal("848916.085936463748695936"),
+    CHECKPOINT_3 + 1: Decimal("949398.242163151858483080"),
+}
+
+
+def run_processor(last_known_block: int) -> None:
     global caught_up
     # first block to process
-    block_num = LONDON
+    block_num = last_known_block + 1 if last_known_block != 0 else last_known_block
 
-    block_processor = BlockProcessor()
+    block_processor = BlockProcessor(burned_eth=BURNED_ETH[block_num])
     while _still_running():
         time.sleep(0)
 
@@ -112,10 +122,11 @@ def main():
     args: Namespace = parse_args()
     dry_run: bool = getattr(args, "dry_run")
 
-    processor = Thread(target=run_processor, name="Block Processor")
-    tweeter = Thread(
-        target=functools.partial(run_tweeter, dry_run=dry_run), name="Tweeter"
+    processor = Thread(
+        target=functools.partial(run_processor, last_known_block=CHECKPOINT_2),
+        name="Block Processor",
     )
+    tweeter = Thread(target=functools.partial(run_tweeter, dry_run=dry_run), name="Tweeter")
 
     processor.start()
     tweeter.start()

@@ -27,9 +27,7 @@ class EthereumClient:
 
             # parse JSON response
             if response.status_code != 200:
-                LOG.error(
-                    f"[Attempt: {i+1}] status code: {response.status_code}, reason: {response.status_code}"
-                )
+                LOG.error(f"[Attempt: {i+1}] status code: {response.status_code}, reason: {response.status_code}")
 
             else:
                 response_json = json.loads(response.content)
@@ -50,9 +48,7 @@ class EthereumClient:
 
         return response
 
-    def _params(
-        self, method: str, params: List[str]
-    ) -> Dict[str, Union[str, int, List[str]]]:
+    def _params(self, method: str, params: List[str]) -> Dict[str, Union[str, int, List[str]]]:
         return {"jsonrpc": "2.0", "method": method, "params": params, "id": 1}
 
     def eth_blockNumber(self) -> int:
@@ -98,9 +94,7 @@ class EthereumClient:
             raise IOError(f"status code: {r.status_code}, reason: {r.status_code}")
 
     def eth_getUncleByBlockNumberAndIndex(self, num: int, index) -> UncleBlock:
-        params = self._params(
-            "eth_getUncleByBlockNumberAndIndex", [hex(num), hex(index)]
-        )
+        params = self._params("eth_getUncleByBlockNumberAndIndex", [hex(num), hex(index)])
         r = self.retry_post(params)
         if r.status_code == 200:
             block_dict = json.loads(r.content)

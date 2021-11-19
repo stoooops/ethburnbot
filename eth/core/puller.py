@@ -18,18 +18,14 @@ class BlockPuller:
     def eth_blockNumber(self) -> int:
         return self._eth_client.eth_blockNumber()
 
-    def _get_uncles(
-        self, block: Block, cached: bool = False, prev_sha3_uncles: str = ""
-    ) -> List[UncleBlock]:
+    def _get_uncles(self, block: Block, cached: bool = False, prev_sha3_uncles: str = "") -> List[UncleBlock]:
 
         has_uncles = prev_sha3_uncles != block._sha3_uncles
         uncles: List[UncleBlock] = []
         # fetch uncles
         if has_uncles:
             # LOG.info(f"Block {block._number} has uncles: {prev_sha3_uncles} -> {block._sha3_uncles}")
-            num_uncles: int = self.eth_getUncleCountByBlockNumber(
-                block.number, cached=cached
-            )
+            num_uncles: int = self.eth_getUncleCountByBlockNumber(block.number, cached=cached)
             if num_uncles > 0:
                 # LOG.info(f"Block {num} has {num_uncles} uncle{'s' if num_uncles > 1 else ''}")
 
@@ -44,20 +40,14 @@ class BlockPuller:
                     found_cached = uncle_block is not None
 
                     if uncle_block is None:
-                        uncle_block = (
-                            self._eth_client.eth_getUncleByBlockNumberAndIndex(
-                                block.number, i
-                            )
-                        )
+                        uncle_block = self._eth_client.eth_getUncleByBlockNumberAndIndex(block.number, i)
                         write_uncle_block(uncle_block, warn_overwrite=found_cached)
 
                     uncles.append(uncle_block)
 
         return uncles
 
-    def eth_getBlockByNumber(
-        self, num: int, cached: bool = False, prev_sha3_uncles: str = ""
-    ) -> DetailedBlock:
+    def eth_getBlockByNumber(self, num: int, cached: bool = False, prev_sha3_uncles: str = "") -> DetailedBlock:
         block = None
         if cached:
             block = read_block(num)
@@ -67,9 +57,7 @@ class BlockPuller:
             # else we need to pull it and write it
             block = self._eth_client.eth_getBlockByNumber(num)
 
-        uncles: List[UncleBlock] = self._get_uncles(
-            block, cached=cached, prev_sha3_uncles=prev_sha3_uncles
-        )
+        uncles: List[UncleBlock] = self._get_uncles(block, cached=cached, prev_sha3_uncles=prev_sha3_uncles)
         detailed_block: DetailedBlock = DetailedBlock(block, uncles)
         write_block(detailed_block, warn_overwrite=found_cached)
         return block

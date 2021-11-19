@@ -19,11 +19,7 @@ def hour_str(hour: datetime, delimiter="T") -> str:
 def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
     is_hourly = isinstance(metrics, HourlyAggregateBlockMetrics)
     report_name = f"{'Hourly' if is_hourly else 'Daily'} Report"
-    time_str = (
-        metrics.hour_range_str(delimiter=" ")
-        if is_hourly
-        else metrics.day_range_str(delimiter=" ")
-    )
+    time_str = metrics.hour_range_str(delimiter=" ") if is_hourly else metrics.day_range_str(delimiter=" ")
 
     graph_bar_width = 120
     graph_height = 400
@@ -56,9 +52,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
         graph_burned_height = int(round(burn_ratio * graph_height))
 
     graph_net_change_class = "transparent" if net_change_eth < 0 else "white"
-    graph_net_change_height = (
-        graph_height - graph_burned_height
-    )  # transparent when negative
+    graph_net_change_height = graph_height - graph_burned_height  # transparent when negative
     graph_end_y = graph_start_y + graph_height
 
     return f"""

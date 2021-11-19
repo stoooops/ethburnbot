@@ -4,12 +4,7 @@ import os
 import shutil
 from decimal import Decimal
 
-from eth.types.block import (
-    AggregateBlockMetrics,
-    Block,
-    HourlyAggregateBlockMetrics,
-    UncleBlock,
-)
+from eth.types.block import AggregateBlockMetrics, Block, HourlyAggregateBlockMetrics, UncleBlock
 from eth.utils.file_utils import block_filepath, uncle_block_filepath
 
 LOG = logging.getLogger(__name__)
@@ -27,13 +22,9 @@ def write_block(block: Block, warn_overwrite: bool = False) -> None:
         if not exists:
             LOG.info(f"Write block {block.number} @ {block.timestamp_dt} to {filepath}")
         elif warn_overwrite:
-            LOG.warning(
-                f"Overwrite block {block.number} @ {block.timestamp_dt} to {filepath}"
-            )
+            LOG.warning(f"Overwrite block {block.number} @ {block.timestamp_dt} to {filepath}")
         else:
-            LOG.debug(
-                f"Overwrite block {block.number} @ {block.timestamp_dt} to {filepath}"
-            )
+            LOG.debug(f"Overwrite block {block.number} @ {block.timestamp_dt} to {filepath}")
 
         f.write(json.dumps(block.json, indent=2))
 
@@ -41,24 +32,16 @@ def write_block(block: Block, warn_overwrite: bool = False) -> None:
 
 
 def write_uncle_block(uncle_block: UncleBlock, warn_overwrite: bool = False) -> None:
-    filepath = uncle_block_filepath(
-        uncle_block.mined_block_num, uncle_block.uncle_index
-    )
+    filepath = uncle_block_filepath(uncle_block.mined_block_num, uncle_block.uncle_index)
     exists = os.path.exists(filepath)
     tmp_filepath = f"{filepath}.tmp"
     with open(tmp_filepath, "w") as f:
         if not exists:
-            LOG.info(
-                f"Write uncle block {uncle_block.mined_block_num}[{uncle_block.uncle_index}] to {filepath}"
-            )
+            LOG.info(f"Write uncle block {uncle_block.mined_block_num}[{uncle_block.uncle_index}] to {filepath}")
         elif warn_overwrite:
-            LOG.warning(
-                f"Overwrite uncle block {uncle_block.mined_block_num}[{uncle_block.uncle_index}] to {filepath}"
-            )
+            LOG.warning(f"Overwrite uncle block {uncle_block.mined_block_num}[{uncle_block.uncle_index}] to {filepath}")
         else:
-            LOG.debug(
-                f"Overwrite uncle block {uncle_block.number} @ {uncle_block.timestamp_dt} to {filepath}"
-            )
+            LOG.debug(f"Overwrite uncle block {uncle_block.number} @ {uncle_block.timestamp_dt} to {filepath}")
 
         f.write(json.dumps(uncle_block.json, indent=2))
 
@@ -81,9 +64,7 @@ def to_billion_usd(num: Decimal) -> str:
     return f"${num / 1_000_000_000:,.2f}B"
 
 
-def write_tweet_fundamentals(
-    metrics: AggregateBlockMetrics, eth_usd_price: Decimal
-) -> str:
+def write_tweet_fundamentals(metrics: AggregateBlockMetrics, eth_usd_price: Decimal) -> str:
     period_burn = metrics.burnt_eth * eth_usd_price
 
     annualized_burn = period_burn * 365 / 30
@@ -105,18 +86,14 @@ def write_tweet_fundamentals(
 
 
 def calc_inflation_rate(metrics: AggregateBlockMetrics) -> Decimal:
-    issuance_multiplier = 365 * (
-        24 if isinstance(metrics, HourlyAggregateBlockMetrics) else 1
-    )
+    issuance_multiplier = 365 * (24 if isinstance(metrics, HourlyAggregateBlockMetrics) else 1)
     change_per_year: Decimal = issuance_multiplier * metrics.net_issuance_eth
     inflation_pct: Decimal = 100 * change_per_year / SUPPLY
 
     return inflation_pct
 
 
-def write_tweet_aggregate(
-    metrics: AggregateBlockMetrics, eth_usd_price: Decimal
-) -> str:
+def write_tweet_aggregate(metrics: AggregateBlockMetrics, eth_usd_price: Decimal) -> str:
     emoji = get_emoji(metrics.burnt_eth)
 
     burned_price_usd = metrics.burnt_eth * eth_usd_price
@@ -126,9 +103,7 @@ def write_tweet_aggregate(
     # no_burn_change_per_year =  365*24*metrics.issuance_eth
     # no_burn_annualized = 100 * no_burn_change_per_year / SUPPLY
 
-    time_phrase = (
-        "last hour" if isinstance(metrics, HourlyAggregateBlockMetrics) else "yesterday"
-    )
+    time_phrase = "last hour" if isinstance(metrics, HourlyAggregateBlockMetrics) else "yesterday"
     header_line = f"{metrics.burnt_eth:,.4f} $ETH burned {emoji} {time_phrase}."
     if int(metrics.burnt_eth) == 69:
         header_line += " Nice."

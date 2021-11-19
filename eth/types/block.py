@@ -51,11 +51,7 @@ class DayAggregateBlockMetrics(AggregateBlockMetrics):
 
     def day_range_str(self, delimiter="T") -> str:
         next_day = self.day + timedelta(days=1)
-        return (
-            self.day.strftime(f"%Y-%m-%d{delimiter}%H:%M")
-            + "-"
-            + next_day.strftime("24:%M%Z")
-        )
+        return self.day.strftime(f"%Y-%m-%d{delimiter}%H:%M") + "-" + next_day.strftime("24:%M%Z")
 
 
 @dataclass
@@ -64,11 +60,7 @@ class HourlyAggregateBlockMetrics(DayAggregateBlockMetrics):
 
     def hour_range_str(self, delimiter="T") -> str:
         next_hour = self.hour + timedelta(hours=1)
-        return (
-            self.hour.strftime(f"%Y-%m-%d{delimiter}%H:%M")
-            + "-"
-            + next_hour.strftime("%H:%M%Z")
-        )
+        return self.hour.strftime(f"%Y-%m-%d{delimiter}%H:%M") + "-" + next_hour.strftime("%H:%M%Z")
 
     def time_range_str(self, delimiter="T") -> str:
         return self.hour_range_str(delimiter=delimiter)

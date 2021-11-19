@@ -10,9 +10,7 @@ LOG = getLogger(__name__)
 
 class Tweeter:
     def __init__(self):
-        self._client: TwitterClient = make_twitter_client(
-            secrets_json_filepath="/app/data/secrets/twitter.json"
-        )
+        self._client: TwitterClient = make_twitter_client(secrets_json_filepath="/app/data/secrets/twitter.json")
 
     def process(self, dry_run: bool = False) -> bool:
         tweeted = False
@@ -22,21 +20,15 @@ class Tweeter:
             with open(pending_tweet_filepath, "r") as f:
 
                 tweet = str(f.read())
-                LOG.info(
-                    f"Tweeting{' with media from ' + media_filepath if media_exists else ''}:"
-                )
+                LOG.info(f"Tweeting{' with media from ' + media_filepath if media_exists else ''}:")
                 LOG.info("\n" + tweet)
                 tweeted = True
 
                 if not dry_run:
-                    self._client.tweet(
-                        tweet, media_filepath=(media_filepath if media_exists else None)
-                    )
+                    self._client.tweet(tweet, media_filepath=(media_filepath if media_exists else None))
 
             if not dry_run:
-                tweeted_filepath = os.path.join(
-                    tweeted_tweets_dir(), os.path.basename(pending_tweet_filepath)
-                )
+                tweeted_filepath = os.path.join(tweeted_tweets_dir(), os.path.basename(pending_tweet_filepath))
                 shutil.move(pending_tweet_filepath, tweeted_filepath)
 
             # only process one

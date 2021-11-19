@@ -42,9 +42,7 @@ def setup_logging() -> None:
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        "%(asctime)s %(levelname)s (%(threadName)s) [%(name)s:%(lineno)s] %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s %(levelname)s (%(threadName)s) [%(name)s:%(lineno)s] %(message)s")
     handler.setFormatter(formatter)
     root.addHandler(handler)
 
@@ -94,9 +92,7 @@ def parse_args() -> Namespace:
         default="localhost",
         help="HTTP-RPC server listening interface",
     )
-    parser.add_argument(
-        "--eth.port", type=int, default=8545, help="HTTP-RPC server listening port"
-    )
+    parser.add_argument("--eth.port", type=int, default=8545, help="HTTP-RPC server listening port")
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--block", type=int, default=LONDON, help="Start block")
     return parser.parse_args()
@@ -115,9 +111,7 @@ def main():
 
     puller = Thread(
         name="Block Cacher",
-        target=functools.partial(
-            run_puller, eth_addr=addr, eth_port=port, use_cache=use_cache, block=block
-        ),
+        target=functools.partial(run_puller, eth_addr=addr, eth_port=port, use_cache=use_cache, block=block),
     )
     puller.start()
     puller.join()
