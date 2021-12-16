@@ -29,6 +29,7 @@ TWEET_THRESHOLD = 10000
 class BlockProcessor:
     def __init__(self, burned_eth: Decimal = Decimal(0)):
         self._blocks: List[SummaryBlock] = []
+        self._cached_burned_eth = burned_eth
         self._burned_eth: Decimal = burned_eth
         self._burned_threshold = TWEET_THRESHOLD
 
@@ -73,7 +74,7 @@ class BlockProcessor:
                     pass
 
             burned_usd: Decimal = self._burned_eth * self._eth_usd_price
-            threshold_usd: Decimal = Decimal(5_000_000_000)
+            threshold_usd: Decimal = Decimal(6_000_000_000)
             filename_sub_str: str = f"burned_threshold_USD{threshold_usd:.0f}"
             LOG.info(f"Burned ${burned_usd:,.2f} ({self._burned_eth} ETH) as of block {block.number}")
             if burned_usd >= threshold_usd:
@@ -156,23 +157,34 @@ class BlockProcessor:
 
     def _process_if_end_hour(self) -> None:
         assert len(self._blocks) > 0
+        # latest block
         block: Block = self._blocks[-1]
 
         if len(self._blocks) > 1:
+            # block to summarize
             prev_block = self._blocks[-2]
             assert prev_block.number + 1 == block.number
 
+            now = datetime.now()
+            now_hour = now.replace(minute=0, second=0, microsecond=0)
+            now_day = now_hour.replace(hour=0)
+            prev_hour = now_hour - timedelta(hours=1)
+            # new hour
             # summarize hour
             if block.hour_dt > prev_block.hour_dt:
                 if self.needs_tweet(hour_str(prev_block.hour_dt)):
-                    LOG.info(f"Processing hour before {block.timestamp_dt}...")
-                    metrics: AggregateBlockMetrics = self.aggregate(hour_dt=prev_block.hour_dt)
+                    # check for bug
+                    if block.timestamp_dt < now_hour:
+                        LOG.error(f"Bad logic for block #{block.number} @ {block.timestamp_dt} vs now_hour={now_hour}")
+                    else:
+                        LOG.info(f"Processing hour before {block.timestamp_dt}...")
+                        metrics: AggregateBlockMetrics = self.aggregate(hour_dt=prev_block.hour_dt)
 
-                    # get price
-                    eth_usd_price: Decimal = self._coinbase_client.get_price("ETH")
-                    tweet_filename = self._write_tweet_aggregate(metrics=metrics, eth_usd_price=eth_usd_price)
+                        # get price
+                        eth_usd_price: Decimal = self._coinbase_client.get_price("ETH")
+                        tweet_filename = self._write_tweet_aggregate(metrics=metrics, eth_usd_price=eth_usd_price)
 
-                    self.write_svg(tweet_filename, metrics)
+                        self.write_svg(tweet_filename, metrics)
 
             # summarize day
             if block.day_dt > prev_block.day_dt:
@@ -278,7 +290,7 @@ class BlockProcessor:
         start_number = None
         end_number = None
 
-        cumulative_burnt_eth: Decimal = Decimal(0)
+        cumulative_burnt_eth: Decimal = self._cached_burned_eth
         base_issuance_eth: Decimal = Decimal(0)
         uncle_issuance_eth: Decimal = Decimal(0)
         for block in self._blocks:

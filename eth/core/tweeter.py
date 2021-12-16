@@ -17,6 +17,7 @@ class Tweeter:
         for pending_tweet_filepath in pending_tweets_filepaths(".txt"):
             media_filepath = pending_tweet_filepath.replace(".txt", ".png")
             media_exists = os.path.exists(media_filepath)
+            success = False
             with open(pending_tweet_filepath, "r") as f:
 
                 tweet = str(f.read())
@@ -25,9 +26,9 @@ class Tweeter:
                 tweeted = True
 
                 if not dry_run:
-                    self._client.tweet(tweet, media_filepath=(media_filepath if media_exists else None))
+                    success = self._client.tweet(tweet, media_filepath=(media_filepath if media_exists else None))
 
-            if not dry_run:
+            if success:
                 tweeted_filepath = os.path.join(tweeted_tweets_dir(), os.path.basename(pending_tweet_filepath))
                 shutil.move(pending_tweet_filepath, tweeted_filepath)
 

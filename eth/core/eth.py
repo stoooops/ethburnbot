@@ -23,7 +23,7 @@ class EthereumClient:
             if i > 0:
                 time.sleep(backoff_sec)
 
-            response = requests.post(self._url, json=data)
+            response = requests.post(self._url, json=data, timeout=10)
 
             # parse JSON response
             if response.status_code != 200:

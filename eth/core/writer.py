@@ -104,7 +104,7 @@ def write_tweet_aggregate(metrics: AggregateBlockMetrics, eth_usd_price: Decimal
     # no_burn_annualized = 100 * no_burn_change_per_year / SUPPLY
 
     time_phrase = "last hour" if isinstance(metrics, HourlyAggregateBlockMetrics) else "yesterday"
-    header_line = f"{metrics.burnt_eth:,.4f} $ETH burned {emoji} {time_phrase}."
+    header_line = f"{metrics.burnt_eth:,.2f} $ETH burned {emoji} {time_phrase}."
     if int(metrics.burnt_eth) == 69:
         header_line += " Nice."
     header_line += f" (${burned_price_usd:,.0f})"
@@ -117,8 +117,8 @@ def write_tweet_aggregate(metrics: AggregateBlockMetrics, eth_usd_price: Decimal
         [
             header_line,
             "",
-            f"Issuance: {metrics.issuance_eth:,.4f} ETH",
-            f"Net Change: {'+' if metrics.net_issuance_eth > 0 else ''}{metrics.net_issuance_eth:,.4f} ETH",
+            f"Issuance: {metrics.issuance_eth:,.2f} ETH",
+            f"Net Change: {'+' if metrics.net_issuance_eth > 0 else ''}{metrics.net_issuance_eth:,.2f} ETH",
             annualized_line,
             # "",
             # f"{metrics.time_range_str(delimiter=' ')} UTC",

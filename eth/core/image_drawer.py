@@ -141,7 +141,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
             <path fill="#F4900C" d="M28.394 23.999c.148 3.084-2.561 4.293-4.019 3.709-2.106-.843-1.541-2.291-2.083-5.291s-2.625-5.083-5.708-6c2.25 6.333-1.247 8.667-3.08 9.084-1.872.426-3.753-.001-3.968-4.007C7.352 23.668 6 26.676 6 30c0 .368.023.73.055 1.09C9.125 34.124 13.342 36 18 36s8.875-1.876 11.945-4.91c.032-.36.055-.722.055-1.09 0-2.187-.584-4.236-1.606-6.001z"/>
         </g>
     </svg>
-    <text x="250" y="180" class="txt header">{burned_eth:,.1f} ETH Burned</text>
+    <text x="250" y="180" class="txt header">{burned_eth:,.2f} ETH Burned</text>
     <text x="260" y="225" class="txt med">${burned_usd:,.0f}</text>
 
     <!-- Top right rect -->
@@ -163,7 +163,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
     <text x="{graph_issuance_center_x}"
           y="{graph_start_y + graph_text_pad}"
           class="txt small"
-          text-anchor="middle" style="dominant-baseline: hanging">+{issuance_eth:,.1f}</text>
+          text-anchor="middle" style="dominant-baseline: hanging">+{issuance_eth:,.2f}</text>
     <line x1="{graph_issuance_start_x}"
           x2="{graph_issuance_start_x}"
           y1="{graph_start_y + 3}"
@@ -184,7 +184,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
           y="{graph_end_y + graph_text_pad + 20 + graph_text_pad}"
           class="txt small"
           text-anchor="middle"
-          style="dominant-baseline: hanging">{'+' if net_change_eth > 0 else ''}{net_change_eth:,.1f}</text>
+          style="dominant-baseline: hanging">{'+' if net_change_eth > 0 else ''}{net_change_eth:,.2f}</text>
     <rect x="{graph_issuance_start_x}"
           width="{graph_bar_width}"
           y="{graph_end_y - graph_net_change_height}"
