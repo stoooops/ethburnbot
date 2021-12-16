@@ -95,6 +95,7 @@ def run_tweeter(dry_run: bool) -> None:
     wakeup_sec = 10
     while _still_running():
         time.sleep(0)
+        LOG.info("Tweeter Heartbeat!")
 
         tweeted = False
         if not caught_up:
