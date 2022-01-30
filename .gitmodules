@@ -1,3 +1,6 @@
 [submodule "potpourri"]
 	path = potpourri
 	url = git@github.com:stoooops/potpourri.git
+[submodule "data"]
+	path = data
+	url = git@github.com:stoooops/ethburnbot-data.git
