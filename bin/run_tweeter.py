@@ -54,20 +54,26 @@ def setup_logging() -> None:
 CHECKPOINT_1 = 13233800
 CHECKPOINT_2 = 13596500
 CHECKPOINT_3 = 13648000
+CHECKPOINT_4 = 14000000
+CHECKPOINT_5 = 14100000
 BURNED_ETH: Dict[int, Decimal] = {
     LONDON: Decimal(0),
-    CHECKPOINT_1 + 1: Decimal("301720.664913446243502258"),
-    CHECKPOINT_2 + 1: Decimal("848916.085936463748695936"),
-    CHECKPOINT_3 + 1: Decimal("949398.242163151858483080"),
+    CHECKPOINT_1: Decimal("301720.664913446243502258"),
+    CHECKPOINT_2: Decimal("848916.085936463748695936"),
+    CHECKPOINT_3: Decimal("949398.242163151858483080"),
+    CHECKPOINT_4: Decimal("1487958.407215919376807183"),
+    CHECKPOINT_5: Decimal("1688489.510719468494472673"),
 }
 
 
 def run_processor(last_known_block: int) -> None:
     global caught_up
+
+    burned_eth = BURNED_ETH[last_known_block]
     # first block to process
     block_num = last_known_block + 1 if last_known_block != 0 else last_known_block
 
-    block_processor = BlockProcessor(burned_eth=BURNED_ETH[block_num])
+    block_processor = BlockProcessor(burned_eth=burned_eth)
     while _still_running():
         time.sleep(0)
 
@@ -124,7 +130,7 @@ def main():
     dry_run: bool = getattr(args, "dry_run")
 
     processor = Thread(
-        target=functools.partial(run_processor, last_known_block=CHECKPOINT_2),
+        target=functools.partial(run_processor, last_known_block=max([k for k in BURNED_ETH.keys()])),
         name="Block Processor",
     )
     tweeter = Thread(target=functools.partial(run_tweeter, dry_run=dry_run), name="Tweeter")
