@@ -10,7 +10,7 @@ LOG = getLogger(__name__)
 
 class Tweeter:
     def __init__(self):
-        self._client: TwitterClient = make_twitter_client(secrets_json_filepath="/app/data/secrets/twitter.json")
+        self._client: TwitterClient = make_twitter_client(secrets_json_filepath="/app/config/secrets/twitter.json")
 
     def process(self, dry_run: bool = False) -> bool:
         tweeted = False
