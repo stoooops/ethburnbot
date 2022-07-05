@@ -23,7 +23,8 @@ def hour_str(hour: datetime, delimiter="T") -> str:
     return hour.strftime(f"%Y-%m-%d{delimiter}%H:%M%Z")
 
 
-TWEET_THRESHOLD = 10000
+TWEET_THRESHOLD: int = 10000
+MIN_BURN_THRESHOLD_TWEET: Decimal = Decimal(2_500_000)
 
 
 class BlockProcessor:
@@ -132,8 +133,6 @@ class BlockProcessor:
         self._written.add(filename_sub)
 
     # THRESHOLD
-
-    MIN_BURN_THRESHOLD_TWEET: Decimal = Decimal(2_500_000)
 
     def _process_if_threshold(self) -> None:
         if self._burned_eth > self._burned_threshold:
