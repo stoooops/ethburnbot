@@ -121,6 +121,7 @@ def write_tweet_aggregate(metrics: AggregateBlockMetrics, eth_usd_price: Decimal
             f"Issuance: {metrics.issuance_eth:,.2f} ETH",
             f"Net Change: {'+' if metrics.net_issuance_eth > 0 else ''}{metrics.net_issuance_eth:,.2f} ETH",
             annualized_line,
+            f"Current Price: ${eth_usd_price:,.2f}",
             # "",
             # f"{metrics.time_range_str(delimiter=' ')} UTC",
             # f"Last Block: {metrics.end_number}",
