@@ -15,9 +15,10 @@ SUPPLY = 118_027_683
 
 
 def write_block(block: Block, warn_overwrite: bool = False) -> None:
-    filepath = block_filepath(block.number)
-    exists = os.path.exists(filepath)
-    tmp_filepath = f"{filepath}.tmp"
+    filepath: str = block_filepath(block.number)
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    exists: bool = os.path.exists(filepath)
+    tmp_filepath: str = f"{filepath}.tmp"
     with open(tmp_filepath, "w") as f:
         if not exists:
             LOG.info(f"Write block {block.number} @ {block.timestamp_dt} to {filepath}")
