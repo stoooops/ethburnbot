@@ -44,4 +44,6 @@ def pending_tweets_filepaths(ext: str = "") -> List[str]:
 
 
 def tweeted_tweets_dir() -> str:
-    return os.path.join(tweets_dir(), "tweeted")
+    result = os.path.join(tweets_dir(), "tweeted")
+    os.makedirs(result, exist_ok=True)
+    return result
