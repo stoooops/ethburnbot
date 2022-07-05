@@ -150,6 +150,7 @@ class BlockProcessor:
         tweet: str = write_tweet_threshold(burnt_eth=self._burned_threshold, eth_usd_price=eth_usd_price)
         pending_filepath: str = os.path.join(pending_tweets_dir(), tweet_filename)
         LOG.info(f"Writing {self._burned_threshold} ETH burned tweet to {pending_filepath}")
+        os.makedirs(os.path.dirname(pending_filepath), exist_ok=True)
         with open(pending_filepath, "w") as f:
             f.write(tweet)
 
