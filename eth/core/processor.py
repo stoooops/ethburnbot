@@ -133,11 +133,13 @@ class BlockProcessor:
 
     # THRESHOLD
 
+    MIN_BURN_THRESHOLD_TWEET: Decimal = Decimal(2_500_000)
+
     def _process_if_threshold(self) -> None:
         if self._burned_eth > self._burned_threshold:
             LOG.info(f"Burned: {self._burned_eth}")
 
-            if self.needs_tweet(f"{self._burned_threshold}"):
+            if self._burned_eth >= MIN_BURN_THRESHOLD_TWEET and self.needs_tweet(f"{self._burned_threshold}"):
                 # get price
                 eth_usd_price: Decimal = self._coinbase_client.get_price("ETH")
 
