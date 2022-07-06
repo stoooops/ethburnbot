@@ -1,5 +1,6 @@
 import functools
 import logging
+import os
 import signal
 import sys
 import time
@@ -89,7 +90,7 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "--eth.addr",
         type=str,
-        default="localhost",
+        default=os.getenv("ETHBURNBOT_ETHEREUM_RPC", "localhost"),
         help="HTTP-RPC server listening interface",
     )
     parser.add_argument("--eth.port", type=int, default=8545, help="HTTP-RPC server listening port")
