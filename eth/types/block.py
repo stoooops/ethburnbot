@@ -83,7 +83,7 @@ class SummaryBlock(BaseBlock):
 
     @property
     def uncle_reward_eth(self) -> Decimal:
-        return Decimal(self._uncle_reward) / Decimal(10 ** 18)
+        return Decimal(self._uncle_reward) / Decimal(10**18)
 
 
 class DetailedBlock(BaseBlock):

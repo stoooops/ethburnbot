@@ -9,14 +9,14 @@ docker rm -f ethburnbot_lint_isort
 docker run \
     -v ${REPO_DIR}:/app \
     --name ethburnbot_lint_isort \
+    --user $(id -u):$(id -g) \
     -t ethburnbot \
-    python -m isort /app
+    python -m isort --ignore-whitespace /app
 
 docker rm -f ethburnbot_lint_black
 docker run \
     -v ${REPO_DIR}:/app \
     --name ethburnbot_lint_black \
+    --user $(id -u):$(id -g) \
     -t ethburnbot \
     python -m black /app
-
-sudo chown -R $USER:$USER ${REPO_DIR}
