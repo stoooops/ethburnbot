@@ -2,6 +2,8 @@ version: "3.3"
 
 services:
   puller:
+    build:
+      context: .
     container_name: ethburnbot_puller
     image: ethburnbot:latest
     restart: always
@@ -12,6 +14,8 @@ services:
       - ./:/app
 
   tweeter:
+    build:
+      context: .
     container_name: ethburnbot_tweeter
     image: ethburnbot:latest
     restart: always
