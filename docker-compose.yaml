@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       ETHBURNBOT_ETHEREUM_RPC: ${ETHBURNBOT_ETHEREUM_RPC}
-    command: python -m bin.run_puller --block 15080000
+    command: python -m bin.run_puller --block ${ETHBURNBOT_START_BLOCK:-12965000}
     volumes:
       - ./:/app
 
@@ -15,6 +15,6 @@ services:
     container_name: ethburnbot_tweeter
     image: ethburnbot:latest
     restart: always
-    command: python -m bin.run_tweeter ${ETHBURNBOT_TWEETER_ARGS}
+    command: python -m bin.run_tweeter ${ETHBURNBOT_TWEETER_FLAGS}
     volumes:
       - ./:/app

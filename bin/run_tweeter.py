@@ -15,6 +15,7 @@ from eth.types.block import SummaryBlock
 from potpourri.python.ethereum.constants import LONDON
 
 LOG = logging.getLogger(__name__)
+LOG_WIDTH = 40
 
 
 exit_signal = False
@@ -84,7 +85,7 @@ def run_processor(last_known_block: int) -> None:
         block: Optional[SummaryBlock] = read_block(block_num)
         if block is None:
             if not caught_up:
-                LOG.info(f"{'Processor caught up'.ljust(20)}block={block_num}")
+                LOG.info(f"{'Processor caught up'.ljust(LOG_WIDTH)}block={block_num}")
             caught_up = True
             LOG.debug(f"Block {block_num} not yet available")
             time.sleep(1)
@@ -102,15 +103,15 @@ def run_tweeter(dry_run: bool) -> None:
 
     tweeter = Tweeter()
 
-    wakeup_sec = 10
+    wakeup_sec = 20
     tweets = 0
     while _still_running():
         time.sleep(0)
-        LOG.info(f"{'Tweeter Heartbeat!'.ljust(20)}tweets={tweets} dry_run={dry_run}")
+        LOG.info(f"{'Tweeter Heartbeat!'.ljust(LOG_WIDTH)}tweets={tweets} dry_run={dry_run}")
 
         tweeted = False
         if not caught_up:
-            LOG.info(f"{'Awaiting processor...'.ljust(20)}tweets={tweets} dry_run={dry_run}")
+            LOG.info(f"{'Awaiting processor...'.ljust(LOG_WIDTH)}tweets={tweets} dry_run={dry_run}")
         else:
             tweeted = tweeter.process(dry_run=dry_run)
         tweets = tweets + 1 if tweeted else tweets

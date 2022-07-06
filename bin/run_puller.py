@@ -74,7 +74,7 @@ def run_puller(eth_addr: str, eth_port: int, use_cache: bool, block: int) -> Non
                     LOG.info("Exit Block Cacher")
                     return
 
-        sleep_sec = 1 if datetime.now().minute in [59, 0, 1] else 10
+        sleep_sec = 1 if datetime.now().minute in [59, 0, 1] else 20
         for _ in range(sleep_sec):
             if not _still_running():
                 LOG.info("Exit Block Cacher")
