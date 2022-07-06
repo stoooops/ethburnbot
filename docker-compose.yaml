@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       ETHBURNBOT_ETHEREUM_RPC: ${ETHBURNBOT_ETHEREUM_RPC}
-    command: python -m bin.run_puller --block ${ETHBURNBOT_START_BLOCK:-12965000}
+    command: python -m bin.run_puller --block ${ETHBURNBOT_PULLER_BLOCK:-12965000}
     volumes:
       - ./:/app
 
