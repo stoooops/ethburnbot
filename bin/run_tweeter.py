@@ -80,7 +80,7 @@ def run_processor(last_known_block: int) -> None:
         block: Optional[SummaryBlock] = read_block(block_num)
         if block is None:
             if not caught_up:
-                LOG.info("Processor caught up to Puller")
+                LOG.info(f"{'Processor caught up'.ljust(20)}block={block_num}")
             caught_up = True
             LOG.debug(f"Block {block_num} not yet available")
             time.sleep(1)
@@ -99,15 +99,17 @@ def run_tweeter(dry_run: bool) -> None:
     tweeter = Tweeter()
 
     wakeup_sec = 10
+    tweets = 0
     while _still_running():
         time.sleep(0)
-        LOG.info("Tweeter Heartbeat!")
+        LOG.info(f"{'Tweeter Heartbeat!'.ljust(20)}tweets={tweets} dry_run={dry_run}")
 
         tweeted = False
         if not caught_up:
-            LOG.info("Waiting for processor to catch up before tweeting")
+            LOG.info(f"{'Awaiting processor...'.ljust(20)}tweets={tweets} dry_run={dry_run}")
         else:
             tweeted = tweeter.process(dry_run=dry_run)
+        tweets = tweets + 1 if tweeted else tweets
 
         for _ in range(wakeup_sec if not tweeted else 1):
             if not _still_running():
