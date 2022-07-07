@@ -8,7 +8,7 @@ up:
 	docker-compose up -d
 
 logs:
-	docker-compose logs --follow
+	docker-compose logs --tail=100 --follow
 
 lint:
 	./bin/lint
