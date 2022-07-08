@@ -3,7 +3,7 @@ from decimal import Decimal
 from logging import getLogger
 
 from eth.core.writer import calc_inflation_rate, to_billion_usd
-from eth.types.block import AggregateBlockMetrics, HourlyAggregateBlockMetrics
+from eth.types.block import AggregateBlockMetrics, DayAggregateBlockMetrics, HourlyAggregateBlockMetrics
 
 LOG = getLogger(__name__)
 
@@ -51,15 +51,20 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
         graph_height *= too_big_ratio / burn_ratio
         graph_burned_height = int(round(burn_ratio * graph_height))
 
-    graph_net_change_class = "transparent" if net_change_eth < 0 else "white"
+    issuance_color: str = "#4f7942"
+    graph_net_change_color: str = "transparent" if net_change_eth < 0 else issuance_color
     graph_net_change_height = graph_height - graph_burned_height  # transparent when negative
     graph_end_y = graph_start_y + graph_height
+
+    text_color: str = "black"
+    bar_radius_issuance: int = 20
+    bar_radius_burn: int = 0
 
     return f"""
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
     <style>
     .txt {{
-        fill: white;
+        fill: {text_color};
         font-family: Roboto Mono, monospace;
     }}
     .header {{
@@ -85,6 +90,15 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
         fill: transparent;
         stroke: transparent;
     }}
+    .issuance-bar {{
+        fill: {issuance_color};
+        stroke: {issuance_color};
+        stroke-width: 4px;
+    }}
+    .graph-net-change-block {{
+        fill: {graph_net_change_color};
+        stroke: {graph_net_change_color};
+    }}
     .white {{
         fill: white;
         stroke: white;
@@ -93,10 +107,6 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
     .red {{
         fill: #B23227;
         stroke: #B23227;
-    }}
-    .blue {{
-        fill: blue;
-        stroke: blue;
     }}
     .inflation {{
         font-size: 48pt;
@@ -114,8 +124,12 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
         stroke-opacity: 0.8;
     }}
     .fade {{
-        stroke-opacity: 0.35;
-        opacity: 0.35;
+        stroke-opacity: 0.65;
+        opacity: 0.65;
+    }}
+    .hardfade {{
+        stroke-opacity: 0.25;
+        opacity: 0.25;
     }}
     .deflationary {{
         fill: #F4900C;
@@ -123,8 +137,8 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
     .darkgrey {{
         fill: #393A3C;
     }}
-    .darkblue {{
-      fill: #131827;
+    .background {{
+        fill: #e8e8e8;
     }}
     .nostroke {{
         stroke: none;
@@ -132,7 +146,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
     }}
     </style>
     <!-- background color -->
-    <rect width="1600" height="900" class="darkblue"/>
+    <rect width="1600" height="900" class="background"/>
 
     <!-- Main header text -->
     <svg viewBox="0 0 400 200">
@@ -164,17 +178,38 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
           y="{graph_start_y + graph_text_pad}"
           class="txt small"
           text-anchor="middle" style="dominant-baseline: hanging">+{issuance_eth:,.2f}</text>
+    <rect x="{graph_issuance_start_x}"
+          width="{graph_bar_width}"
+          y="{graph_start_y + 3}"
+          height="{ min(graph_burned_height, graph_height)}"
+          class="issuance-bar hardfade graph-soft nostroke"
+          />
     <line x1="{graph_issuance_start_x}"
           x2="{graph_issuance_start_x}"
           y1="{graph_start_y + 3}"
           y2="{graph_start_y + min(graph_burned_height, graph_height)}"
-          class="white line dashed graph-soft"/>
+          class="issuance-bar line dashed graph-soft"/>
     <line x1="{graph_issuance_start_x + graph_bar_width}"
           x2="{graph_issuance_start_x + graph_bar_width}"
           y1="{graph_start_y + 3}"
           y2="{graph_start_y + min(graph_burned_height, graph_height)}"
-          class="white line dashed graph-soft"/>
-
+          class="issuance-bar line dashed graph-soft"/>
+    <!-- radius -->
+    <rect x="{graph_issuance_start_x}"
+          width="{graph_bar_width}"
+          y="{graph_end_y - graph_net_change_height}"
+          height="{graph_net_change_height}"
+          rx="{bar_radius_issuance}"
+          ry="{bar_radius_issuance}"
+          class="graph-net-change-block graph-soft nostroke"
+          />
+    <!-- overlay except bottom radius part -->
+    <rect x="{graph_issuance_start_x}"
+          width="{graph_bar_width}"
+          y="{graph_end_y - graph_net_change_height}"
+          height="{max(0, graph_net_change_height - bar_radius_issuance)}"
+          class="graph-net-change-block graph-soft nostroke"
+          />
     <!-- Net Change -->
     <text x="{graph_issuance_center_x}"
           y="{graph_end_y + graph_text_pad}"
@@ -185,12 +220,6 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
           class="txt small"
           text-anchor="middle"
           style="dominant-baseline: hanging">{'+' if net_change_eth > 0 else ''}{net_change_eth:,.2f}</text>
-    <rect x="{graph_issuance_start_x}"
-          width="{graph_bar_width}"
-          y="{graph_end_y - graph_net_change_height}"
-          height="{graph_net_change_height}"
-          class="{graph_net_change_class} graph-soft nostroke"
-          />
 
     <!-- Top Line -->
     <line x1="{graph_start_x}"
@@ -203,7 +232,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
           y1="{graph_start_y + graph_height}"
           x2="{graph_burn_start_x + graph_bar_width + 120}"
           y2="{graph_start_y + graph_height}"
-          class="white line graph-soft" />
+          class="black line graph-soft" />
 
     <!-- Burn -->
     <text x="{graph_burn_center_x}"
@@ -214,11 +243,18 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
           y="{graph_start_y + graph_burned_height + graph_text_pad}"
           class="txt small"
           text-anchor="middle"
-          style="dominant-baseline: hanging">-{burned_eth:,.1f}</text>
+          style="dominant-baseline: hanging">-{burned_eth:,.2f}</text>
     <rect x="{graph_burn_start_x}"
           width="{graph_bar_width}"
           y="{graph_start_y}"
           height="{graph_burned_height}"
+          rx="{bar_radius_burn}"
+          ry="{bar_radius_burn}"
+          class="red graph-soft nostroke" />
+    <rect x="{graph_burn_start_x}"
+          width="{graph_bar_width}"
+          y="{graph_start_y}"
+          height="{max(0, graph_burned_height - bar_radius_burn)}"
           class="red graph-soft nostroke" />
 
     <!-- Inflation Pct -->
@@ -232,12 +268,14 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
           text-anchor="middle"
           style="dominant-baseline: middle">{'+' if inflation_pct > 0 else ''}{inflation_pct:,.2f}%</text>
 
+    <!-- Cumlative Burn graphic -->
     <svg viewBox="0 0 150 75">
         <g transform="translate(108,30)" class="fade">
             <path fill="#B23227" d="M35 19c0-2.062-.367-4.039-1.04-5.868-.46 5.389-3.333 8.157-6.335 6.868-2.812-1.208-.917-5.917-.777-8.164.236-3.809-.012-8.169-6.931-11.794 2.875 5.5.333 8.917-2.333 9.125-2.958.231-5.667-2.542-4.667-7.042-3.238 2.386-3.332 6.402-2.333 9 1.042 2.708-.042 4.958-2.583 5.208-2.84.28-4.418-3.041-2.963-8.333C2.52 10.965 1 14.805 1 19c0 9.389 7.611 17 17 17s17-7.611 17-17z"/>
             <path fill="#F4900C" d="M28.394 23.999c.148 3.084-2.561 4.293-4.019 3.709-2.106-.843-1.541-2.291-2.083-5.291s-2.625-5.083-5.708-6c2.25 6.333-1.247 8.667-3.08 9.084-1.872.426-3.753-.001-3.968-4.007C7.352 23.668 6 26.676 6 30c0 .368.023.73.055 1.09C9.125 34.124 13.342 36 18 36s8.875-1.876 11.945-4.91c.032-.36.055-.722.055-1.09 0-2.187-.584-4.236-1.606-6.001z"/>
         </g>
     </svg>
+    <!-- Cumlative Burn label -->
     <text x="1342"
           y="580"
           class="txt totalburntxt"
@@ -254,6 +292,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
           text-anchor="middle"
           style="dominant-baseline: hanging">{cumulative_burned_eth:,.2f} ETH</text>
 
+    <!-- Block Height label -->
     <text x="{1600 - graph_text_pad}"
           y="{900 - graph_text_pad}"
           class="txt small fade"
@@ -263,3 +302,64 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
 </svg>
 
 """
+
+def draw_graph(metrics, eth_usd_price, svg_filename):
+    """
+    Draws the graph and writes it to the output file.
+    """
+    import cairosvg
+    import os
+
+    # Render the SVG.
+    svg = make_svg(metrics=metrics, eth_price_usd=eth_usd_price)
+
+    # Write the SVG.
+    with open(svg_filename, 'w') as f:
+        f.write(svg)
+
+    cairosvg.svg2png(url=svg_filename, write_to=svg_filename.replace("svg", "png"))
+    os.remove(svg_filename)
+
+def main() -> None:
+    """
+    Main function.
+    """
+    from potpourri.python.ethereum.coinbase.client import CoinbaseClient
+    # Get the data.
+    eth_usd_price: Decimal = CoinbaseClient().get_price("ETH")
+    metrics = DayAggregateBlockMetrics(
+                day=datetime.now().date(),
+                start_number=1,
+                end_number=1000000,
+                burnt_eth=Decimal(100),
+                cumulative_burned_eth=Decimal(2500000),
+                base_issuance_eth=Decimal(500),
+                uncle_issuance_eth=Decimal(0),
+            )
+    draw_graph(metrics=metrics, eth_usd_price=eth_usd_price, svg_filename="graph.svg")
+
+    metrics2 = DayAggregateBlockMetrics(
+                day=metrics.day,
+                start_number=metrics.start_number,
+                end_number=metrics.end_number,
+                cumulative_burned_eth=metrics.cumulative_burned_eth,
+                burnt_eth=Decimal(500),
+                base_issuance_eth=Decimal(500),
+                uncle_issuance_eth=metrics.uncle_issuance_eth,
+            )
+    draw_graph(metrics=metrics2, eth_usd_price=eth_usd_price, svg_filename="graph2.svg")
+
+    metrics3 = DayAggregateBlockMetrics(
+                day=metrics.day,
+                start_number=metrics.start_number,
+                end_number=metrics.end_number,
+                cumulative_burned_eth=metrics.cumulative_burned_eth,
+                burnt_eth=Decimal(700),
+                base_issuance_eth=Decimal(500),
+                uncle_issuance_eth=metrics.uncle_issuance_eth,
+            )
+    draw_graph(metrics=metrics3, eth_usd_price=eth_usd_price, svg_filename="graph3.svg")
+
+
+if __name__ == "__main__":
+    main()

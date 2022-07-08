@@ -8,7 +8,7 @@ from argparse import ArgumentParser, Namespace
 from datetime import datetime
 from threading import Thread
 
-from eth.core.eth import EthereumClient, GethClient
+from eth.core.ethereum_client import EthereumClient, GethClient
 from eth.core.puller import BlockPuller
 from potpourri.python.ethereum.constants import LONDON
 

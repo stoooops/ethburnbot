@@ -2,7 +2,7 @@ import os
 from logging import getLogger
 from typing import List
 
-from eth.core.eth import EthereumClient
+from eth.core.ethereum_client import EthereumClient
 from eth.core.reader import read_block, read_uncle_block
 from eth.core.writer import write_block, write_uncle_block
 from eth.types.block import Block, DetailedBlock, UncleBlock
