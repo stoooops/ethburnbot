@@ -56,9 +56,10 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
     graph_net_change_height = graph_height - graph_burned_height  # transparent when negative
     graph_end_y = graph_start_y + graph_height
 
-    text_color: str = "black"
-    bar_radius_issuance: int = 20
-    bar_radius_burn: int = 0
+    text_color: str = "white"
+    bar_radius_issuance: int = 0
+    bar_radius_burn: int = 20
+    background_color: str = "#181818"
 
     return f"""
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
@@ -94,6 +95,9 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
         fill: {issuance_color};
         stroke: {issuance_color};
         stroke-width: 4px;
+    }}
+    .bottom-line {{
+        stroke: {issuance_color};
     }}
     .graph-net-change-block {{
         fill: {graph_net_change_color};
@@ -138,7 +142,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
         fill: #393A3C;
     }}
     .background {{
-        fill: #e8e8e8;
+        fill: {background_color};
     }}
     .nostroke {{
         stroke: none;
@@ -161,7 +165,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
     <!-- Top right rect -->
     <rect x="1000" width="600" height="56" class="red"/>
     <polygon points="1000,0 1000,56 944,0" class="red" />
-    <text x="1580" y="8" class="txt report hanging" writing-mode="rl" text-anchor="end">@ethburnbot | {report_name}</text>
+    <text x="1580" y="6" class="txt report hanging" writing-mode="rl" text-anchor="end">@ethburnbot | {report_name}</text>
     <text x="1580" y="66" class="txt report small hanging" writing-mode="rl" text-anchor="end">{time_str} UTC</text>
 
     <!-- Bottom left rect -->
@@ -173,7 +177,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
     <!-- Graph -->
 
     <!-- Issuance -->
-    <text x="{graph_issuance_center_x}" y="{graph_start_y - graph_text_pad}" class="txt small" text-anchor="middle" >Issuance</text>
+    <text x="{graph_issuance_center_x}" y="{graph_start_y - graph_text_pad}" class="txt small" text-anchor="middle" >Issued</text>
     <text x="{graph_issuance_center_x}"
           y="{graph_start_y + graph_text_pad}"
           class="txt small"
@@ -232,13 +236,13 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
           y1="{graph_start_y + graph_height}"
           x2="{graph_burn_start_x + graph_bar_width + 120}"
           y2="{graph_start_y + graph_height}"
-          class="black line graph-soft" />
+          class="bottom-line line graph-soft" />
 
     <!-- Burn -->
     <text x="{graph_burn_center_x}"
           y="{graph_start_y - graph_text_pad}"
           class="txt small"
-          text-anchor="middle">Burn</text>
+          text-anchor="middle">Burned</text>
     <text x="{graph_burn_center_x}"
           y="{graph_start_y + graph_burned_height + graph_text_pad}"
           class="txt small"
