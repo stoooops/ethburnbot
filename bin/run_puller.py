@@ -119,12 +119,7 @@ def main():
     use_cache: bool = not getattr(args, "no_cache")
     block: int = getattr(args, "block")
 
-    puller = Thread(
-        name="Block Cacher",
-        target=functools.partial(run_puller, eth_addr=addr, eth_port=port, use_cache=use_cache, block=block),
-    )
-    puller.start()
-    puller.join()
+    run_puller(eth_addr=addr, eth_port=port, use_cache=use_cache, block=block)
 
 
 if __name__ == "__main__":
