@@ -58,7 +58,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
 
     text_color: str = "white"
     bar_radius_issuance: int = 0
-    bar_radius_burn: int = 20
+    bar_radius_burn: int = 0
     background_color: str = "#181818"
 
     return f"""
@@ -80,12 +80,17 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
     .small {{
         font-size: 20px;
     }}
-    .med {{
+    .midsmall {{
+        font-size: 22px;
+    }}
+    .medium {{
         font-size: 24px;
     }}
-    .bigger {{
+    .bold {{
         font-weight: bold;
-        font-size: 28px;
+    }}
+    .big {{
+        font-size: 26px;
     }}
     .transparent {{
         fill: transparent;
@@ -160,7 +165,7 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
         </g>
     </svg>
     <text x="250" y="180" class="txt header">{burned_eth:,.2f} ETH Burned</text>
-    <text x="260" y="225" class="txt med">${burned_usd:,.0f}</text>
+    <text x="260" y="225" class="txt medium">${burned_usd:,.0f}</text>
 
     <!-- Top right rect -->
     <rect x="1000" width="600" height="56" class="red"/>
@@ -286,13 +291,13 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
           text-anchor="middle"
           style="dominant-baseline: middle">{cumulative_burned_usd_billions}</text>
     <text x="1342"
-          y="660"
-          class="txt bigger"
+          y="650"
+          class="txt big bold"
           text-anchor="middle"
           style="dominant-baseline: hanging">Cumulative Burn</text>
     <text x="1342"
-          y="700"
-          class="txt med"
+          y="688"
+          class="txt midsmall"
           text-anchor="middle"
           style="dominant-baseline: hanging">{cumulative_burned_eth:,.2f} ETH</text>
 
@@ -307,61 +312,65 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
 
 """
 
+
 def draw_graph(metrics, eth_usd_price, svg_filename):
     """
     Draws the graph and writes it to the output file.
     """
-    import cairosvg
     import os
+
+    import cairosvg
 
     # Render the SVG.
     svg = make_svg(metrics=metrics, eth_price_usd=eth_usd_price)
 
     # Write the SVG.
-    with open(svg_filename, 'w') as f:
+    with open(svg_filename, "w") as f:
         f.write(svg)
 
     cairosvg.svg2png(url=svg_filename, write_to=svg_filename.replace("svg", "png"))
     os.remove(svg_filename)
+
 
 def main() -> None:
     """
     Main function.
     """
     from potpourri.python.ethereum.coinbase.client import CoinbaseClient
+
     # Get the data.
     eth_usd_price: Decimal = CoinbaseClient().get_price("ETH")
     metrics = DayAggregateBlockMetrics(
-                day=datetime.now().date(),
-                start_number=1,
-                end_number=1000000,
-                burnt_eth=Decimal(100),
-                cumulative_burned_eth=Decimal(2500000),
-                base_issuance_eth=Decimal(500),
-                uncle_issuance_eth=Decimal(0),
-            )
+        day=datetime.now().date(),
+        start_number=1,
+        end_number=1000000,
+        burnt_eth=Decimal(100),
+        cumulative_burned_eth=Decimal(2500000),
+        base_issuance_eth=Decimal(500),
+        uncle_issuance_eth=Decimal(0),
+    )
     draw_graph(metrics=metrics, eth_usd_price=eth_usd_price, svg_filename="graph.svg")
 
     metrics2 = DayAggregateBlockMetrics(
-                day=metrics.day,
-                start_number=metrics.start_number,
-                end_number=metrics.end_number,
-                cumulative_burned_eth=metrics.cumulative_burned_eth,
-                burnt_eth=Decimal(500),
-                base_issuance_eth=Decimal(500),
-                uncle_issuance_eth=metrics.uncle_issuance_eth,
-            )
+        day=metrics.day,
+        start_number=metrics.start_number,
+        end_number=metrics.end_number,
+        cumulative_burned_eth=metrics.cumulative_burned_eth,
+        burnt_eth=Decimal(500),
+        base_issuance_eth=Decimal(500),
+        uncle_issuance_eth=metrics.uncle_issuance_eth,
+    )
     draw_graph(metrics=metrics2, eth_usd_price=eth_usd_price, svg_filename="graph2.svg")
 
     metrics3 = DayAggregateBlockMetrics(
-                day=metrics.day,
-                start_number=metrics.start_number,
-                end_number=metrics.end_number,
-                cumulative_burned_eth=metrics.cumulative_burned_eth,
-                burnt_eth=Decimal(700),
-                base_issuance_eth=Decimal(500),
-                uncle_issuance_eth=metrics.uncle_issuance_eth,
-            )
+        day=metrics.day,
+        start_number=metrics.start_number,
+        end_number=metrics.end_number,
+        cumulative_burned_eth=metrics.cumulative_burned_eth,
+        burnt_eth=Decimal(700),
+        base_issuance_eth=Decimal(500),
+        uncle_issuance_eth=metrics.uncle_issuance_eth,
+    )
     draw_graph(metrics=metrics3, eth_usd_price=eth_usd_price, svg_filename="graph3.svg")
 
 
