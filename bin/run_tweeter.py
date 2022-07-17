@@ -19,7 +19,6 @@ LOG_WIDTH = 40
 
 
 exit_signal = False
-caught_up = False
 
 
 def signal_handler(sig, frame):
@@ -72,13 +71,12 @@ BURNED_ETH: Dict[int, Decimal] = {
 
 
 def run_processor(last_known_block: int) -> None:
-    global caught_up
-
     burned_eth = BURNED_ETH[last_known_block]
     # first block to process
     block_num = last_known_block + 1 if last_known_block != 0 else last_known_block
 
     block_processor = BlockProcessor(burned_eth=burned_eth)
+    caught_up = False
     while _still_running():
         time.sleep(0)
 
@@ -99,8 +97,6 @@ def run_processor(last_known_block: int) -> None:
 
 
 def run_tweeter(dry_run: bool) -> None:
-    global caught_up
-
     tweeter = Tweeter()
 
     wakeup_sec = 20
@@ -110,14 +106,11 @@ def run_tweeter(dry_run: bool) -> None:
         time.sleep(0)
         LOG.info(f"{'Tweeter Heartbeat!'.ljust(LOG_WIDTH)}tweets={tweets} failures={failures} dry_run={dry_run}")
 
-        tweeted = False
-        if not caught_up:
-            LOG.info(f"{'Awaiting processor...'.ljust(LOG_WIDTH)}tweets={tweets} failures={failures} dry_run={dry_run}")
-        else:
-            try:
-                tweeted = tweeter.process(dry_run=dry_run)
-            except TweeterException as e:
-                failures += 1
+        tweeted: bool = False
+        try:
+            tweeted = tweeter.process(dry_run=dry_run)
+        except TweeterException as e:
+            failures += 1
         tweets = tweets + 1 if tweeted else tweets
 
         for _ in range(wakeup_sec if not tweeted else 1):
