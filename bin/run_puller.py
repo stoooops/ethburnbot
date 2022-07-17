@@ -109,6 +109,9 @@ def main():
     setup_logging()
 
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGHUP, signal_handler)
+    signal.signal(signal.SIGQUIT, signal_handler)
 
     args: Namespace = parse_args()
     addr: str = getattr(args, "eth.addr")
