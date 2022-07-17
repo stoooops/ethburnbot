@@ -75,7 +75,6 @@ def run_puller(eth_addr: str, eth_port: int, use_cache: bool, block: int) -> Non
                     block_num, cached=use_cache, prev_sha3_uncles=prev_sha3_uncles
                 )
                 prev_sha3_uncles = block._sha3_uncles
-                log_progress(block, prefix="cache")
 
                 if not _still_running():
                     log_progress(block, prefix="exit block cacher")
