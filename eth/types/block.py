@@ -25,6 +25,8 @@ class AggregateBlockMetrics:
     cumulative_burned_eth: Decimal
     base_issuance_eth: Decimal
     uncle_issuance_eth: Decimal
+    gas_used: Decimal
+    gas_fees_paid: Decimal
 
     @property
     def num_blocks(self) -> int:

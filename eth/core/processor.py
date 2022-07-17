@@ -77,7 +77,9 @@ class BlockProcessor:
             burned_usd: Decimal = self._burned_eth * self._eth_usd_price
             threshold_usd: Decimal = Decimal(6_000_000_000)
             filename_sub_str: str = f"burned_threshold_USD{threshold_usd:.0f}"
-            LOG.info(f"block={block.number} time={block.timestamp_dt} burned=${burned_usd:,.2f} burned_eth={self._burned_eth}")
+            LOG.info(
+                f"block={block.number} time={block.timestamp_dt} burned=${burned_usd:,.2f} burned_eth={self._burned_eth}"
+            )
             if burned_usd >= threshold_usd:
                 # LOG.info(f"Threshold met: ${threshold_usd}")
                 needs_tweet = self.needs_tweet(filename_sub_str)
@@ -240,6 +242,8 @@ class BlockProcessor:
         svg: str = make_svg(metrics=metrics, eth_price_usd=eth_usd_price)
         pending_img_filepath_svg: str = pending_filepath.replace(".txt", ".svg")
         LOG.info(f"Write SVG file to {pending_img_filepath_svg}")
+        LOG.info(f"gas_fees_paid={metrics.gas_fees_paid}")
+        LOG.info(f"gas_used=     {metrics.gas_used}")
         with open(pending_img_filepath_svg, "w") as f:
             f.write(svg)
 
@@ -295,6 +299,8 @@ class BlockProcessor:
         cumulative_burnt_eth: Decimal = self._cached_burned_eth
         base_issuance_eth: Decimal = Decimal(0)
         uncle_issuance_eth: Decimal = Decimal(0)
+        inrange_gas_used: Decimal = Decimal(0)
+        inrange_gas_fees_paid: Decimal = Decimal(0)
         for block in self._blocks:
             # count sum of previous
             if (hour_dt is not None and block.hour_dt <= hour_dt) or (day_dt is not None and block.day_dt <= day_dt):
@@ -303,6 +309,8 @@ class BlockProcessor:
             # count within range
             if (hour_dt is not None and block.hour_dt == hour_dt) or (day_dt is not None and block.day_dt == day_dt):
                 burnt_eth = burnt_eth + block.burned_eth
+                inrange_gas_used += block.gas_used
+                inrange_gas_fees_paid += block.gas_used * block.base_fee_per_gas
 
                 start_number = start_number if start_number is not None else block.number
                 end_number = block.number
@@ -320,6 +328,8 @@ class BlockProcessor:
                 cumulative_burned_eth=cumulative_burnt_eth,
                 base_issuance_eth=base_issuance_eth,
                 uncle_issuance_eth=uncle_issuance_eth,
+                gas_used=inrange_gas_used,
+                gas_fees_paid=inrange_gas_fees_paid,
             )
         else:
             return DayAggregateBlockMetrics(
@@ -330,4 +340,6 @@ class BlockProcessor:
                 cumulative_burned_eth=cumulative_burnt_eth,
                 base_issuance_eth=base_issuance_eth,
                 uncle_issuance_eth=uncle_issuance_eth,
+                gas_used=inrange_gas_used,
+                gas_fees_paid=inrange_gas_fees_paid,
             )
