@@ -11,7 +11,7 @@ LOG = logging.getLogger(__name__)
 
 
 # TODO compute accurately this is just a snapshot taken. Small rounding error for now.
-SUPPLY = 118_027_683
+SUPPLY = 119_712_770
 
 
 def write_block(block: Block, warn_overwrite: bool = False) -> None:
@@ -114,13 +114,17 @@ def write_tweet_aggregate(metrics: AggregateBlockMetrics, eth_usd_price: Decimal
     if inflation_pct < 0:
         annualized_line = annualized_line + " 📉"
 
+    avg_gwei = metrics.gas_fees_paid / metrics.gas_used
+
     return "\n".join(
         [
             header_line,
             "",
+            f"Average BASEFEE: {avg_gwei:,.2f} gwei",
             f"Issuance: {metrics.issuance_eth:,.2f} ETH",
             f"Net Change: {'+' if metrics.net_issuance_eth > 0 else ''}{metrics.net_issuance_eth:,.2f} ETH",
             annualized_line,
+            "",
             f"Current Price: ${eth_usd_price:,.2f}",
             # "",
             # f"{metrics.time_range_str(delimiter=' ')} UTC",

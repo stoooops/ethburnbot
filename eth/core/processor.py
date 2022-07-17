@@ -316,6 +316,7 @@ class BlockProcessor:
                 uncle_issuance_eth = uncle_issuance_eth + block.uncle_reward_eth
         LOG.info(f"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX gas_fees_paid={inrange_gas_fees_paid}")
         LOG.info(f"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX gas_used=     {inrange_gas_used}")
+        LOG.info(f"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX gwei=         {inrange_gas_fees_paid / inrange_gas_used:.2f}")
 
         if hour_dt is not None:
             return HourlyAggregateBlockMetrics(
