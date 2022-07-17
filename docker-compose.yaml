@@ -13,6 +13,16 @@ services:
     volumes:
       - ./:/app
 
+  processor:
+    build:
+      context: .
+    container_name: ethburnbot_processor
+    image: ethburnbot:latest
+    restart: unless-stopped
+    command: python -m bin.run_tweeter ${ETHBURNBOT_TWEETER_FLAGS} --process
+    volumes:
+      - ./:/app
+
   tweeter:
     build:
       context: .

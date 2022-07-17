@@ -21,7 +21,7 @@ exit_signal = False
 
 def signal_handler(sig, frame):
     global exit_signal
-    LOG.info("SIGINT!")
+    LOG.info(f"Exit signal received: {sig}")
     exit_signal = True
     time.sleep(1)
     LOG.info("Shutdown in 3")

@@ -129,6 +129,7 @@ def run_tweeter(dry_run: bool) -> None:
 def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--dry-run", action="store_true", help="Dry run")
+    parser.add_argument("--process", action="store_true", help="Run processor")
     return parser.parse_args()
 
 
@@ -143,17 +144,11 @@ def main():
     args: Namespace = parse_args()
     dry_run: bool = getattr(args, "dry_run")
 
-    processor = Thread(
-        target=functools.partial(run_processor, last_known_block=max([k for k in BURNED_ETH.keys()])),
-        name="Processor",
-    )
-    tweeter = Thread(target=functools.partial(run_tweeter, dry_run=dry_run), name="Tweeter")
-
-    processor.start()
-    tweeter.start()
-
-    processor.join()
-    tweeter.join()
+    last_known_block = max([k for k in BURNED_ETH.keys()])
+    if args.process:
+        run_processor(last_known_block=last_known_block)
+    else:
+        run_tweeter(dry_run=dry_run)
 
 
 if __name__ == "__main__":
