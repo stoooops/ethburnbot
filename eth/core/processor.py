@@ -69,7 +69,7 @@ class BlockProcessor:
                 try:
                     self._eth_usd_price: Decimal = self._coinbase_client.get_price("ETH")
                     self._eth_usd_price_time = now
-                    LOG.info(f"USD Price = ${self._eth_usd_price:,.2f}")
+                    LOG.info(f"ETH/USD=${self._eth_usd_price:,.2f}")
 
                 except:
                     pass
@@ -77,7 +77,7 @@ class BlockProcessor:
             burned_usd: Decimal = self._burned_eth * self._eth_usd_price
             threshold_usd: Decimal = Decimal(6_000_000_000)
             filename_sub_str: str = f"burned_threshold_USD{threshold_usd:.0f}"
-            LOG.info(f"Burned ${burned_usd:,.2f} ({self._burned_eth} ETH) as of block {block.number}")
+            LOG.info(f"block={block.number} burned=${burned_usd:,.2f} burned_eth={self._burned_eth}")
             if burned_usd >= threshold_usd:
                 # LOG.info(f"Threshold met: ${threshold_usd}")
                 needs_tweet = self.needs_tweet(filename_sub_str)
