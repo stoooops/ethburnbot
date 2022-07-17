@@ -65,7 +65,7 @@ def run_puller(eth_addr: str, eth_port: int, use_cache: bool, block: int) -> Non
         time.sleep(0)
         latest_block_number = block_puller.eth_blockNumber()
         block: DetailedBlock = block_puller.eth_getBlockByNumber(
-            block_num, cached=use_cache, prev_sha3_uncles=prev_sha3_uncles
+            latest_block_number, cached=use_cache, prev_sha3_uncles=prev_sha3_uncles
         )
         log_progress(block, "latest")
 
