@@ -114,7 +114,7 @@ def write_tweet_aggregate(metrics: AggregateBlockMetrics, eth_usd_price: Decimal
     if inflation_pct < 0:
         annualized_line = annualized_line + " 📉"
 
-    avg_gwei = metrics.gas_fees_paid / metrics.gas_used
+    avg_gwei = metrics.gas_fees_paid / metrics.gas_used / Decimal(1_000_000_000)
 
     return "\n".join(
         [
