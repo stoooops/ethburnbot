@@ -44,7 +44,7 @@ def setup_logging() -> None:
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(asctime)s %(levelname)s (%(threadName)s) [%(name)s:%(lineno)s] %(message)s")
+    formatter = logging.Formatter("%(asctime)s %(levelname)7s (%(threadName)9s) [%(name)s:%(lineno)s] %(message)s")
     handler.setFormatter(formatter)
     root.addHandler(handler)
 

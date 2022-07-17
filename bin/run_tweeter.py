@@ -47,7 +47,7 @@ def setup_logging() -> None:
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(asctime)s %(levelname)s (%(threadName)s) [%(name)s:%(lineno)s] %(message)s")
+    formatter = logging.Formatter("%(asctime)s %(levelname)7s (%(threadName)9s) [%(name)s:%(lineno)s] %(message)s")
     handler.setFormatter(formatter)
     root.addHandler(handler)
 
@@ -108,11 +108,11 @@ def run_tweeter(dry_run: bool) -> None:
     failures = 0
     while _still_running():
         time.sleep(0)
-        LOG.info(f"{'Tweeter Heartbeat!'.ljust(LOG_WIDTH)}tweets={tweets} dry_run={dry_run} failures={failures}")
+        LOG.info(f"{'Tweeter Heartbeat!'.ljust(LOG_WIDTH)}tweets={tweets} failures={failures} dry_run={dry_run}")
 
         tweeted = False
         if not caught_up:
-            LOG.info(f"{'Awaiting processor...'.ljust(LOG_WIDTH)}tweets={tweets} dry_run={dry_run} failures={failures}")
+            LOG.info(f"{'Awaiting processor...'.ljust(LOG_WIDTH)}tweets={tweets} failures={failures} dry_run={dry_run}")
         else:
             try:
                 tweeted = tweeter.process(dry_run=dry_run)
@@ -142,7 +142,7 @@ def main():
 
     processor = Thread(
         target=functools.partial(run_processor, last_known_block=max([k for k in BURNED_ETH.keys()])),
-        name="Block Processor",
+        name="Processor",
     )
     tweeter = Thread(target=functools.partial(run_tweeter, dry_run=dry_run), name="Tweeter")
 
