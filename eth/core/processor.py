@@ -183,7 +183,6 @@ class BlockProcessor:
                     else:
                         LOG.info(f"Processing hour before {block.timestamp_dt}...")
                         metrics: AggregateBlockMetrics = self.aggregate(hour_dt=prev_block.hour_dt)
-
                         # get price
                         eth_usd_price: Decimal = self._coinbase_client.get_price("ETH")
                         tweet_filename = self._write_tweet_aggregate(metrics=metrics, eth_usd_price=eth_usd_price)
@@ -242,8 +241,6 @@ class BlockProcessor:
         svg: str = make_svg(metrics=metrics, eth_price_usd=eth_usd_price)
         pending_img_filepath_svg: str = pending_filepath.replace(".txt", ".svg")
         LOG.info(f"Write SVG file to {pending_img_filepath_svg}")
-        LOG.info(f"gas_fees_paid={metrics.gas_fees_paid}")
-        LOG.info(f"gas_used=     {metrics.gas_used}")
         with open(pending_img_filepath_svg, "w") as f:
             f.write(svg)
 
@@ -317,6 +314,8 @@ class BlockProcessor:
 
                 base_issuance_eth = base_issuance_eth + block.base_issuance_eth
                 uncle_issuance_eth = uncle_issuance_eth + block.uncle_reward_eth
+        LOG.info(f"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX gas_fees_paid={inrange_gas_fees_paid}")
+        LOG.info(f"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX gas_used=     {inrange_gas_used}")
 
         if hour_dt is not None:
             return HourlyAggregateBlockMetrics(
