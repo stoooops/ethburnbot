@@ -105,16 +105,18 @@ def run_tweeter(dry_run: bool) -> None:
 
     wakeup_sec = 20
     tweets = 0
+    failures = 0
     while _still_running():
         time.sleep(0)
-        LOG.info(f"{'Tweeter Heartbeat!'.ljust(LOG_WIDTH)}tweets={tweets} dry_run={dry_run}")
+        LOG.info(f"{'Tweeter Heartbeat!'.ljust(LOG_WIDTH)}tweets={tweets} dry_run={dry_run} failures={failures}")
 
         tweeted = False
         if not caught_up:
-            LOG.info(f"{'Awaiting processor...'.ljust(LOG_WIDTH)}tweets={tweets} dry_run={dry_run}")
+            LOG.info(f"{'Awaiting processor...'.ljust(LOG_WIDTH)}tweets={tweets} dry_run={dry_run} failures={failures}")
         else:
             tweeted = tweeter.process(dry_run=dry_run)
         tweets = tweets + 1 if tweeted else tweets
+        failures = failures + 1 if not tweeted and not dry_run else failures
 
         for _ in range(wakeup_sec if not tweeted else 1):
             if not _still_running():
