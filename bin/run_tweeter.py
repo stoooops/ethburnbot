@@ -10,7 +10,7 @@ from typing import Dict, Optional
 
 from eth.core.processor import BlockProcessor
 from eth.core.reader import read_block
-from eth.core.tweeter import Tweeter
+from eth.core.tweeter import Tweeter, TweeterException
 from eth.types.block import SummaryBlock
 from potpourri.python.ethereum.constants import LONDON
 
@@ -114,9 +114,11 @@ def run_tweeter(dry_run: bool) -> None:
         if not caught_up:
             LOG.info(f"{'Awaiting processor...'.ljust(LOG_WIDTH)}tweets={tweets} dry_run={dry_run} failures={failures}")
         else:
-            tweeted = tweeter.process(dry_run=dry_run)
+            try:
+                tweeted = tweeter.process(dry_run=dry_run)
+            except TweeterException as e:
+                failures += 1
         tweets = tweets + 1 if tweeted else tweets
-        failures = failures + 1 if not tweeted and not dry_run else failures
 
         for _ in range(wakeup_sec if not tweeted else 1):
             if not _still_running():

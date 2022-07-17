@@ -8,6 +8,10 @@ from potpourri.python.twitter.client import TwitterClient, make_twitter_client
 LOG = getLogger(__name__)
 
 
+class TweeterException(Exception):
+    pass
+
+
 class Tweeter:
     def __init__(self):
         self._client: TwitterClient = make_twitter_client(secrets_json_filepath="/app/config/secrets/twitter.json")
@@ -27,6 +31,8 @@ class Tweeter:
 
                 if not dry_run:
                     success = self._client.tweet(tweet, media_filepath=(media_filepath if media_exists else None))
+                    if not success:
+                        raise TweeterException("Tweet failed to send")
 
             if success:
                 tweeted_filepath = os.path.join(tweeted_tweets_dir(), os.path.basename(pending_tweet_filepath))
