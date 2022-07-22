@@ -182,11 +182,6 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
     <!-- Graph -->
 
     <!-- Issuance -->
-    <text x="{graph_issuance_center_x}" y="{graph_start_y - graph_text_pad}" class="txt small" text-anchor="middle" >Issued</text>
-    <text x="{graph_issuance_center_x}"
-          y="{graph_start_y + graph_text_pad}"
-          class="txt small"
-          text-anchor="middle" style="dominant-baseline: hanging">+{issuance_eth:,.2f}</text>
     <rect x="{graph_issuance_start_x}"
           width="{graph_bar_width}"
           y="{graph_start_y + 3}"
@@ -219,6 +214,14 @@ def make_svg(metrics: AggregateBlockMetrics, eth_price_usd: Decimal) -> str:
           height="{max(0, graph_net_change_height - bar_radius_issuance)}"
           class="graph-net-change-block graph-soft nostroke"
           />
+    <!-- Issuance Text -->
+    <text x="{graph_issuance_center_x}"
+          y="{graph_start_y - graph_text_pad}"
+          class="txt small" text-anchor="middle" >Issued</text>
+    <text x="{graph_issuance_center_x}"
+          y="{graph_start_y + graph_text_pad}"
+          class="txt small"
+          text-anchor="middle" style="dominant-baseline: hanging">+{issuance_eth:,.2f}</text>
     <!-- Net Change -->
     <text x="{graph_issuance_center_x}"
           y="{graph_end_y + graph_text_pad}"
@@ -348,6 +351,8 @@ def main() -> None:
         cumulative_burned_eth=Decimal(2500000),
         base_issuance_eth=Decimal(500),
         uncle_issuance_eth=Decimal(0),
+        gas_used=1,
+        gas_fees_paid=1,
     )
     draw_graph(metrics=metrics, eth_usd_price=eth_usd_price, svg_filename="graph.svg")
 
@@ -359,6 +364,8 @@ def main() -> None:
         burnt_eth=Decimal(500),
         base_issuance_eth=Decimal(500),
         uncle_issuance_eth=metrics.uncle_issuance_eth,
+        gas_used=1,
+        gas_fees_paid=1,
     )
     draw_graph(metrics=metrics2, eth_usd_price=eth_usd_price, svg_filename="graph2.svg")
 
@@ -370,8 +377,23 @@ def main() -> None:
         burnt_eth=Decimal(700),
         base_issuance_eth=Decimal(500),
         uncle_issuance_eth=metrics.uncle_issuance_eth,
+        gas_used=1,
+        gas_fees_paid=1,
     )
     draw_graph(metrics=metrics3, eth_usd_price=eth_usd_price, svg_filename="graph3.svg")
+
+    metrics3 = DayAggregateBlockMetrics(
+        day=metrics.day,
+        start_number=metrics.start_number,
+        end_number=metrics.end_number,
+        cumulative_burned_eth=metrics.cumulative_burned_eth,
+        burnt_eth=Decimal(10),
+        base_issuance_eth=Decimal(500),
+        uncle_issuance_eth=metrics.uncle_issuance_eth,
+        gas_used=1,
+        gas_fees_paid=1,
+    )
+    draw_graph(metrics=metrics3, eth_usd_price=eth_usd_price, svg_filename="graph4.svg")
 
 
 if __name__ == "__main__":
